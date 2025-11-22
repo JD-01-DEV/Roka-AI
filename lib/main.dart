@@ -3,7 +3,10 @@ import 'package:isar/isar.dart';
 import 'package:localgpt/providers/chat_provider.dart';
 
 import 'package:localgpt/databases/ai_model_db.dart';
+import 'package:localgpt/providers/user_preferences_provider.dart';
 import 'package:localgpt/schemas/chat_session_model.dart';
+import 'package:localgpt/schemas/user_preferences.dart';
+import 'package:localgpt/themes/app_themes.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +18,7 @@ import 'package:localgpt/screens/chat_screen.dart';
 import 'package:localgpt/screens/settings_screen.dart';
 
 late Isar isar; // creating Isar variable named isar
+bool isDarkMode = true;
 
 // it the main function that runs / starts the app
 void main() async {
@@ -27,7 +31,11 @@ void main() async {
     AiModelSchema,
     ChatSessionSchema,
     ChatMessageSchema,
+    UserPreferencesSchema,
   ], directory: dir.path);
+
+  final prefs = await isar.userPreferences.get(0);
+  final isDarkMode = prefs?.isDarkMode ?? true;
 
   // this func is from material.dart which runs the app
   runApp(
@@ -48,20 +56,26 @@ void main() async {
           // creating AiModelDb as well to handle model's list and other related
           create: (_) => AiModelDb(isar),
         ),
+        ChangeNotifierProvider(create: (_) => UserPreferencesProvider(isar)),
       ],
-      child:
-          const App(), // assinging APP as child to provider so it can be run by runApp function
+      child: App(
+        isDarkMode: isDarkMode,
+      ), // assinging APP as child to provider so it can be run by runApp function
     ),
   );
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  bool isDarkMode;
+  App({required this.isDarkMode, super.key});
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
     return MaterialApp(
-      theme: ThemeData.dark(),
+      theme: AppThemes.lightTheme,
+      darkTheme: AppThemes.darkTheme,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {

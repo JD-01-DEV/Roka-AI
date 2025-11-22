@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:localgpt/main.dart';
 import 'package:localgpt/providers/chat_provider.dart';
 import 'package:localgpt/databases/ai_model_db.dart';
+import 'package:localgpt/providers/user_preferences_provider.dart';
 import 'package:localgpt/schemas/chat_session_model.dart';
 import 'package:localgpt/services/api_service.dart';
+import 'package:localgpt/themes/app_themes.dart';
 import 'package:localgpt/widgets/message_bubble.dart';
 import 'package:localgpt/widgets/model_options.dart';
 import 'package:provider/provider.dart';
@@ -52,6 +55,7 @@ class __ChatScreenState extends State<ChatScreen> {
       512; // maximum tokens to limit leanth of output sequence by model
 
   bool isLoading = false;
+  bool _isDrawerOpen = false;
   // bool _isInChatSession = false;
 
   // handles creating new chat
@@ -118,22 +122,38 @@ class __ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
     final chatProvider = Provider.of<ChatProvider>(
       context,
     ); // getting chatProvider at the start of app
     return Scaffold(
+      onDrawerChanged: (isOpened) => setState(() => _isDrawerOpen = isOpened),
       drawer: Drawer(
+        backgroundColor: isDarkMode
+            ? AppThemes.primaryDark
+            : AppThemes.primarylight,
         child: Column(
           children: [
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: 10),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (_) => _onSearchChanged(),
                   decoration: InputDecoration(
                     hintText: "Search",
-                    prefixIcon: Icon(Icons.search),
+                    hintStyle: TextStyle(
+                      color: isDarkMode
+                          ? AppThemes.secondaryTextDark
+                          : AppThemes.secondaryTextLight,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: isDarkMode
+                          ? AppThemes.secondaryTextDark
+                          : AppThemes.secondaryTextLight,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
                     ),
@@ -151,9 +171,21 @@ class __ChatScreenState extends State<ChatScreen> {
                             itemBuilder: (context, index) {
                               final session = _searchResults[index];
                               return ListTile(
-                                title: Text(session.title),
+                                title: Text(
+                                  session.title,
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? AppThemes.primaryTextDark
+                                        : AppThemes.primaryTextLight,
+                                  ),
+                                ),
                                 subtitle: Text(
                                   session.createdAt.toString().substring(0, 16),
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? AppThemes.secondaryTextDark
+                                        : AppThemes.secondaryTextLight,
+                                  ),
                                 ),
                                 onTap: () {
                                   Navigator.pop(context);
@@ -162,23 +194,74 @@ class __ChatScreenState extends State<ChatScreen> {
                               );
                             },
                           )
-                        : Center(child: Text("No Result found")))
+                        : Center(
+                            child: Text(
+                              "No Result found",
+                              style: TextStyle(
+                                color: isDarkMode
+                                    ? AppThemes.secondaryTextDark
+                                    : AppThemes.secondaryTextLight,
+                              ),
+                            ),
+                          ))
                   : Column(
                       children: [
-                        ListTile(
-                          leading: Icon(Icons.chat_bubble_outline),
-                          title: Text("New Chat"),
-                          onTap: () => _newChat(chatProvider),
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.view_comfy_alt_outlined),
-                          title: Text("Models"),
-                          onTap: () =>
-                              Navigator.pushNamed(context, '/model_manager'),
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.message),
-                          title: Text("Chats"),
+                        Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(
+                                Icons.chat_bubble_outline,
+                                color: isDarkMode
+                                    ? AppThemes.secondaryTextDark
+                                    : AppThemes.secondaryTextLight,
+                              ),
+                              title: Text(
+                                "New Chat",
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? AppThemes.secondaryTextDark
+                                      : AppThemes.secondaryTextLight,
+                                ),
+                              ),
+                              onTap: () => _newChat(chatProvider),
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                Icons.view_comfy_alt_outlined,
+                                color: isDarkMode
+                                    ? AppThemes.secondaryTextDark
+                                    : AppThemes.secondaryTextLight,
+                              ),
+                              title: Text(
+                                "Models",
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? AppThemes.secondaryTextDark
+                                      : AppThemes.secondaryTextLight,
+                                ),
+                              ),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/model_manager',
+                              ),
+                            ),
+                            ListTile(
+                              leading: Icon(
+                                Icons.message,
+                                color: isDarkMode
+                                    ? AppThemes.secondaryTextDark
+                                    : AppThemes.secondaryTextLight,
+                              ),
+                              title: Text(
+                                "Chats",
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? AppThemes.secondaryTextDark
+                                      : AppThemes.secondaryTextLight,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         Expanded(
                           child: Padding(
@@ -191,17 +274,56 @@ class __ChatScreenState extends State<ChatScreen> {
                               itemCount: chatProvider.sessions.length,
                               itemBuilder: (context, index) {
                                 final session = chatProvider.sessions[index];
-                                return ListTile(
-                                  title: Text(session.title),
-                                  subtitle: Text(session.modelUsed),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    chatProvider.loadMessages(session.id);
-                                  },
-                                  trailing: IconButton(
-                                    onPressed: () =>
-                                        chatProvider.deleteSession(session.id),
-                                    icon: Icon(Icons.delete),
+                                return Container(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? AppThemes.secondaryDark
+                                        : AppThemes.secondaryLight,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    title: Text(
+                                      session.title,
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? AppThemes.primaryTextDark
+                                            : AppThemes.primaryTextLight,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      session.modelUsed,
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? AppThemes.secondaryTextDark
+                                            : AppThemes.secondaryTextLight,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      chatProvider.loadMessages(session.id);
+                                    },
+                                    // trailing: IconButton(
+                                    //   onPressed: () => chatProvider
+                                    //       .deleteSession(session.id),
+                                    //   icon: Icon(Icons.delete),
+                                    // ),
+                                    trailing: IconButton(
+                                      onPressed: () {
+                                        context
+                                            .read<ChatProvider>()
+                                            .deleteSession(session.id);
+                                      },
+                                      icon: Icon(
+                                        Icons.delete,
+                                        color: isDarkMode
+                                            ? AppThemes.secondaryTextDark
+                                            : AppThemes.secondaryTextLight,
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
@@ -218,7 +340,12 @@ class __ChatScreenState extends State<ChatScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pushNamed(context, '/settings'),
-                    icon: Icon(Icons.settings),
+                    icon: Icon(
+                      Icons.settings,
+                      color: isDarkMode
+                          ? AppThemes.secondaryTextDark
+                          : AppThemes.secondaryTextLight,
+                    ),
                   ),
                 ],
               ),
@@ -227,7 +354,27 @@ class __ChatScreenState extends State<ChatScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Center(child: Text("Local GPT")),
+        title: Center(
+          child: Text(
+            "Local GPT",
+            style: TextStyle(
+              color: isDarkMode
+                  ? AppThemes.primaryTextDark
+                  : AppThemes.primaryTextLight,
+            ),
+          ),
+        ),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              onPressed: Scaffold.of(context).openDrawer,
+              icon: Icon(Icons.menu_outlined),
+              color: isDarkMode
+                  ? AppThemes.primaryTextDark
+                  : AppThemes.primaryTextLight,
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: MenuOptions(),
@@ -240,6 +387,9 @@ class __ChatScreenState extends State<ChatScreen> {
                 exportAsText(messages);
               },
             ),
+            color: isDarkMode
+                ? AppThemes.primaryTextDark
+                : AppThemes.primaryTextLight,
           ),
         ],
         actionsPadding: EdgeInsets.only(right: 15),
@@ -317,56 +467,83 @@ class __ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          GestureDetector(
-            onTap: _focusNode.requestFocus,
+        ],
+      ),
+      bottomNavigationBar: Row(
+        children: [
+          Expanded(
             child: Container(
-              width: double.infinity,
-              height: 100,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: EdgeInsets.only(left: 10, bottom: 20),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(30.0),
+                color: isDarkMode
+                    ? AppThemes.secondaryDark
+                    : AppThemes.secondaryLight,
+                borderRadius: const BorderRadius.all(Radius.circular(50)),
+              ),
+              child: TextField(
+                controller: _messageController,
+                onSubmitted: (_) => _sendMessage(chatProvider),
+                focusNode: _focusNode,
+                decoration: InputDecoration(
+                  hintText: "Ask any thing ...",
+                  hintStyle: TextStyle(
+                    color: isDarkMode
+                        ? AppThemes.secondaryTextDark
+                        : AppThemes.secondaryTextLight,
+                  ),
+                  contentPadding: EdgeInsets.only(left: 25),
+                  border: InputBorder.none,
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      onSubmitted: (_) => _sendMessage(chatProvider),
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: "Ask any thing ...",
-                        hintStyle: TextStyle(color: Colors.white24),
-                        contentPadding: EdgeInsets.only(left: 25),
-                        border: InputBorder.none,
-                      ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? AppThemes.secondaryDark
+                  : AppThemes.secondaryLight,
+              borderRadius: const BorderRadius.all(Radius.circular(50)),
+            ),
+            margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
+            child: IconButton(
+              icon: isLoading
+                  ? Icon(
+                      Icons.stop_circle_outlined,
+                      size: 30,
+                      color: isDarkMode
+                          ? AppThemes.primaryTextDark
+                          : AppThemes.primaryTextLight,
+                    )
+                  : Icon(
+                      Icons.send,
+                      color: isDarkMode
+                          ? AppThemes.primaryTextDark
+                          : AppThemes.primaryTextLight,
                     ),
-                  ),
-                  IconButton(
-                    icon: isLoading
-                        ? Icon(Icons.stop_circle_outlined, size: 30)
-                        : Icon(Icons.send),
-                    onPressed: () {
-                      if (!isLoading ||
-                          context.read<ChatProvider>().hasResponseCompleted) {
-                        if (chatProvider.currentSessionId == null) {
-                          chatProvider.startNewSessions(
-                            "MyGGUFModel",
-                            "Chat ${DateTime.now().toString().substring(0, 10)}",
-                          );
-                        }
-                        _sendMessage(chatProvider);
-                        currentSessionId = chatProvider.currentSessionId;
-                      } else {
-                        ApiService.stopStream();
-                        setState(() => isLoading = false);
-                      }
-                    },
-                  ),
-                ],
-              ),
+              onPressed: () async {
+                if (await context.read<AiModelDb>().isAnyModelLoaded()) {
+                  if (!isLoading ||
+                      context.read<ChatProvider>().hasResponseCompleted) {
+                    if (chatProvider.currentSessionId == null) {
+                      chatProvider.startNewSessions(
+                        "MyGGUFModel",
+                        "Chat ${DateTime.now().toString().substring(0, 10)}",
+                      );
+                    }
+                    _sendMessage(chatProvider);
+                    currentSessionId = chatProvider.currentSessionId;
+                  } else {
+                    ApiService.stopStream();
+                    setState(() => isLoading = false);
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Load the model first.")),
+                  );
+                }
+              },
             ),
           ),
         ],

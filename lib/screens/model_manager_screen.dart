@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:localgpt/databases/ai_model_db.dart';
+import 'package:localgpt/main.dart';
 import 'package:localgpt/schemas/ai_model_model.dart';
+import 'package:localgpt/themes/app_themes.dart';
 import 'package:localgpt/widgets/model_tile.dart';
 import 'package:localgpt/services/api_service.dart';
 import 'package:localgpt/widgets/parameter_dialog.dart';
@@ -76,6 +78,13 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
         ? fileName.substring(0, indexOfDot) // filted name
         : fileName; // and if couldn't then full / original file name
     final modelParameters = extractParams(fileName);
+
+    if (fileName.substring(indexOfDot) != "gguf") {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Only guff files are allowed")));
+    }
+    ;
 
     // creating new AiModel with available info.
     final aiModel = AiModel()
@@ -209,7 +218,6 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
         children: [
           Expanded(
             child: Consumer<AiModelDb>(
-              // ✅ ensures rebuild
               builder: (context, db, _) {
                 final aiModels = db.aiModels;
                 return ListView.builder(
@@ -244,6 +252,9 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
       ),
 
       floatingActionButton: FloatingActionButton(
+        backgroundColor: isDarkMode
+            ? AppThemes.accentDark
+            : AppThemes.accentLight,
         onPressed: () => _isPickingFile ? null : _addModel(),
         child: Icon(Icons.add_outlined),
       ),

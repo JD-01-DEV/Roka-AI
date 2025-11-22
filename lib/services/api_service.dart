@@ -2,8 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static const String server =
-      "http://localhost:8000"; // defining server adress
+  static String server = "http://127.0.0.1:8000"; // defining server adress
 
   // Optional: a non-streaming helper that just collects the streamed text
   static Future<String> sendPrompt(

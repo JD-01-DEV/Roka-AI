@@ -14,7 +14,7 @@ class _ModelOptionsState extends State<MenuOptions> {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
-      icon: const Icon(Icons.more_vert),
+      icon: const Icon(Icons.more_horiz),
       itemBuilder: (context) => [
         PopupMenuItem(
           value: 'settings',
