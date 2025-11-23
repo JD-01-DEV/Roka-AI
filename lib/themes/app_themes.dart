@@ -32,6 +32,14 @@ class AppThemes {
 
   static Color noColor = const Color.fromARGB(0, 255, 255, 255);
 
+  // Helper method for BoxDecoration
+  static BoxDecoration boxDecoration(bool isDarkMode) {
+    return BoxDecoration(
+      color: isDarkMode ? secondaryDark : secondaryLight,
+      borderRadius: BorderRadius.circular(8),
+    );
+  }
+
   // ---------------Dark Theme -----------------
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -42,6 +50,25 @@ class AppThemes {
       foregroundColor: bgLight,
     ),
     drawerTheme: DrawerThemeData(backgroundColor: primaryDark),
+
+    textTheme: TextTheme(
+      bodyLarge: TextStyle(color: primaryTextDark),
+      bodyMedium: TextStyle(color: primaryTextDark),
+      bodySmall: TextStyle(color: secondaryTextDark),
+      titleLarge: TextStyle(color: primaryTextDark),
+      titleMedium: TextStyle(color: primaryTextDark),
+      titleSmall: TextStyle(color: secondaryTextDark),
+      labelLarge: TextStyle(color: primaryTextDark),
+      labelMedium: TextStyle(color: secondaryTextDark),
+      labelSmall: TextStyle(color: tertiaryTextDark),
+    ),
+    iconTheme: IconThemeData(color: primaryTextDark),
+
+    cardTheme: CardThemeData(
+      color: secondaryDark,
+      margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    ),
   );
 
   // -----------------light Theme -------------------
@@ -54,5 +81,23 @@ class AppThemes {
       foregroundColor: primaryDark,
     ),
     drawerTheme: DrawerThemeData(backgroundColor: primarylight),
+    textTheme: TextTheme(
+      bodyLarge: TextStyle(color: primaryTextLight),
+      bodyMedium: TextStyle(color: primaryTextLight),
+      bodySmall: TextStyle(color: secondaryTextLight),
+      titleLarge: TextStyle(color: primaryTextLight),
+      titleMedium: TextStyle(color: primaryTextLight),
+      titleSmall: TextStyle(color: secondaryTextLight),
+      labelLarge: TextStyle(color: primaryTextLight),
+      labelMedium: TextStyle(color: secondaryTextLight),
+      labelSmall: TextStyle(color: tertiaryTextLight),
+    ),
+    iconTheme: IconThemeData(color: primaryTextLight),
+
+    cardTheme: CardThemeData(
+      color: secondaryLight,
+      margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    ),
   );
 }

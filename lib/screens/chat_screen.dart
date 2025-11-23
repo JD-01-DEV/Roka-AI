@@ -34,6 +34,12 @@ class __ChatScreenState extends State<ChatScreen> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     context.read<AiModelDb>().resetOnStartup();
+    // Fetch the dark mode preference when the app starts
+    final provider = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
+    provider.getIsDarkMode();
   }
 
   // diposing / deleting controllers and focus variables when app closes
@@ -55,7 +61,6 @@ class __ChatScreenState extends State<ChatScreen> {
       512; // maximum tokens to limit leanth of output sequence by model
 
   bool isLoading = false;
-  bool _isDrawerOpen = false;
   // bool _isInChatSession = false;
 
   // handles creating new chat
@@ -127,11 +132,7 @@ class __ChatScreenState extends State<ChatScreen> {
       context,
     ); // getting chatProvider at the start of app
     return Scaffold(
-      onDrawerChanged: (isOpened) => setState(() => _isDrawerOpen = isOpened),
       drawer: Drawer(
-        backgroundColor: isDarkMode
-            ? AppThemes.primaryDark
-            : AppThemes.primarylight,
         child: Column(
           children: [
             SafeArea(
@@ -143,17 +144,8 @@ class __ChatScreenState extends State<ChatScreen> {
                   onChanged: (_) => _onSearchChanged(),
                   decoration: InputDecoration(
                     hintText: "Search",
-                    hintStyle: TextStyle(
-                      color: isDarkMode
-                          ? AppThemes.secondaryTextDark
-                          : AppThemes.secondaryTextLight,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: isDarkMode
-                          ? AppThemes.secondaryTextDark
-                          : AppThemes.secondaryTextLight,
-                    ),
+                    hintStyle: TextStyle(),
+                    prefixIcon: Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
                     ),
@@ -171,21 +163,10 @@ class __ChatScreenState extends State<ChatScreen> {
                             itemBuilder: (context, index) {
                               final session = _searchResults[index];
                               return ListTile(
-                                title: Text(
-                                  session.title,
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? AppThemes.primaryTextDark
-                                        : AppThemes.primaryTextLight,
-                                  ),
-                                ),
+                                title: Text(session.title, style: TextStyle()),
                                 subtitle: Text(
                                   session.createdAt.toString().substring(0, 16),
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? AppThemes.secondaryTextDark
-                                        : AppThemes.secondaryTextLight,
-                                  ),
+                                  style: TextStyle(),
                                 ),
                                 onTap: () {
                                   Navigator.pop(context);
@@ -195,71 +176,28 @@ class __ChatScreenState extends State<ChatScreen> {
                             },
                           )
                         : Center(
-                            child: Text(
-                              "No Result found",
-                              style: TextStyle(
-                                color: isDarkMode
-                                    ? AppThemes.secondaryTextDark
-                                    : AppThemes.secondaryTextLight,
-                              ),
-                            ),
+                            child: Text("No Result found", style: TextStyle()),
                           ))
                   : Column(
                       children: [
                         Column(
                           children: [
                             ListTile(
-                              leading: Icon(
-                                Icons.chat_bubble_outline,
-                                color: isDarkMode
-                                    ? AppThemes.secondaryTextDark
-                                    : AppThemes.secondaryTextLight,
-                              ),
-                              title: Text(
-                                "New Chat",
-                                style: TextStyle(
-                                  color: isDarkMode
-                                      ? AppThemes.secondaryTextDark
-                                      : AppThemes.secondaryTextLight,
-                                ),
-                              ),
+                              leading: Icon(Icons.chat_bubble_outline),
+                              title: Text("New Chat", style: TextStyle()),
                               onTap: () => _newChat(chatProvider),
                             ),
                             ListTile(
-                              leading: Icon(
-                                Icons.view_comfy_alt_outlined,
-                                color: isDarkMode
-                                    ? AppThemes.secondaryTextDark
-                                    : AppThemes.secondaryTextLight,
-                              ),
-                              title: Text(
-                                "Models",
-                                style: TextStyle(
-                                  color: isDarkMode
-                                      ? AppThemes.secondaryTextDark
-                                      : AppThemes.secondaryTextLight,
-                                ),
-                              ),
+                              leading: Icon(Icons.view_comfy_alt_outlined),
+                              title: Text("Models", style: TextStyle()),
                               onTap: () => Navigator.pushNamed(
                                 context,
                                 '/model_manager',
                               ),
                             ),
                             ListTile(
-                              leading: Icon(
-                                Icons.message,
-                                color: isDarkMode
-                                    ? AppThemes.secondaryTextDark
-                                    : AppThemes.secondaryTextLight,
-                              ),
-                              title: Text(
-                                "Chats",
-                                style: TextStyle(
-                                  color: isDarkMode
-                                      ? AppThemes.secondaryTextDark
-                                      : AppThemes.secondaryTextLight,
-                                ),
-                              ),
+                              leading: Icon(Icons.message),
+                              title: Text("Chats", style: TextStyle()),
                             ),
                           ],
                         ),
@@ -288,19 +226,11 @@ class __ChatScreenState extends State<ChatScreen> {
                                   child: ListTile(
                                     title: Text(
                                       session.title,
-                                      style: TextStyle(
-                                        color: isDarkMode
-                                            ? AppThemes.primaryTextDark
-                                            : AppThemes.primaryTextLight,
-                                      ),
+                                      style: TextStyle(),
                                     ),
                                     subtitle: Text(
                                       session.modelUsed,
-                                      style: TextStyle(
-                                        color: isDarkMode
-                                            ? AppThemes.secondaryTextDark
-                                            : AppThemes.secondaryTextLight,
-                                      ),
+                                      style: TextStyle(),
                                     ),
                                     onTap: () {
                                       Navigator.pop(context);
@@ -317,12 +247,7 @@ class __ChatScreenState extends State<ChatScreen> {
                                             .read<ChatProvider>()
                                             .deleteSession(session.id);
                                       },
-                                      icon: Icon(
-                                        Icons.delete,
-                                        color: isDarkMode
-                                            ? AppThemes.secondaryTextDark
-                                            : AppThemes.secondaryTextLight,
-                                      ),
+                                      icon: Icon(Icons.delete),
                                     ),
                                   ),
                                 );
@@ -340,12 +265,7 @@ class __ChatScreenState extends State<ChatScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pushNamed(context, '/settings'),
-                    icon: Icon(
-                      Icons.settings,
-                      color: isDarkMode
-                          ? AppThemes.secondaryTextDark
-                          : AppThemes.secondaryTextLight,
-                    ),
+                    icon: Icon(Icons.settings),
                   ),
                 ],
               ),
@@ -354,24 +274,12 @@ class __ChatScreenState extends State<ChatScreen> {
         ),
       ),
       appBar: AppBar(
-        title: Center(
-          child: Text(
-            "Local GPT",
-            style: TextStyle(
-              color: isDarkMode
-                  ? AppThemes.primaryTextDark
-                  : AppThemes.primaryTextLight,
-            ),
-          ),
-        ),
+        title: Center(child: Text("Local GPT", style: TextStyle())),
         leading: Builder(
           builder: (context) {
             return IconButton(
               onPressed: Scaffold.of(context).openDrawer,
               icon: Icon(Icons.menu_outlined),
-              color: isDarkMode
-                  ? AppThemes.primaryTextDark
-                  : AppThemes.primaryTextLight,
             );
           },
         ),
@@ -387,9 +295,6 @@ class __ChatScreenState extends State<ChatScreen> {
                 exportAsText(messages);
               },
             ),
-            color: isDarkMode
-                ? AppThemes.primaryTextDark
-                : AppThemes.primaryTextLight,
           ),
         ],
         actionsPadding: EdgeInsets.only(right: 15),
@@ -509,19 +414,8 @@ class __ChatScreenState extends State<ChatScreen> {
             margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
             child: IconButton(
               icon: isLoading
-                  ? Icon(
-                      Icons.stop_circle_outlined,
-                      size: 30,
-                      color: isDarkMode
-                          ? AppThemes.primaryTextDark
-                          : AppThemes.primaryTextLight,
-                    )
-                  : Icon(
-                      Icons.send,
-                      color: isDarkMode
-                          ? AppThemes.primaryTextDark
-                          : AppThemes.primaryTextLight,
-                    ),
+                  ? Icon(Icons.stop_circle_outlined, size: 30)
+                  : Icon(Icons.send),
               onPressed: () async {
                 if (await context.read<AiModelDb>().isAnyModelLoaded()) {
                   if (!isLoading ||

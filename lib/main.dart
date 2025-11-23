@@ -67,21 +67,25 @@ void main() async {
 
 class App extends StatelessWidget {
   bool isDarkMode;
-  App({required this.isDarkMode, super.key});
+   App({required this.isDarkMode, super.key});
 
   @override
   Widget build(BuildContext context) {
     isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
-    return MaterialApp(
-      theme: AppThemes.lightTheme,
-      darkTheme: AppThemes.darkTheme,
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => ChatScreen(),
-        '/settings': (context) => SettingsScreen(),
-        '/model_manager': (context) => ModelManagerScreen(),
+    return Consumer<UserPreferencesProvider>(
+      builder: (context, provider, child) {
+        return MaterialApp(
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          debugShowCheckedModeBanner: false,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => ChatScreen(),
+            '/settings': (context) => SettingsScreen(),
+            '/model_manager': (context) => ModelManagerScreen(),
+          },
+        );
       },
     );
   }

@@ -164,12 +164,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                   child: SelectableText(
                     widget.content,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isDarkMode
-                          ? AppThemes.primaryTextDark
-                          : AppThemes.primaryTextLight,
-                    ),
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),
@@ -188,12 +183,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                           context,
                         ).showSnackBar(SnackBar(content: Text("Copied")));
                       },
-                      icon: Icon(
-                        Icons.copy,
-                        color: isDarkMode
-                            ? AppThemes.primaryTextDark
-                            : AppThemes.primaryTextLight,
-                      ),
+                      icon: Icon(Icons.copy),
                     )
                   : context.read<ChatProvider>().hasResponseCompleted
                   ? Row(
@@ -207,36 +197,18 @@ class _MessageBubbleState extends State<MessageBubble> {
                               context,
                             ).showSnackBar(SnackBar(content: Text("Copied")));
                           },
-                          icon: Icon(
-                            Icons.copy,
-                            color: isDarkMode
-                                ? AppThemes.primaryTextDark
-                                : AppThemes.primaryTextLight,
-                          ),
+                          icon: Icon(Icons.copy),
                         ),
                         IconButton(
                           onPressed: _regenerateMessage,
-                          icon: Icon(
-                            Icons.loop,
-                            color: isDarkMode
-                                ? AppThemes.primaryTextDark
-                                : AppThemes.primaryTextLight,
-                          ),
+                          icon: Icon(Icons.loop),
                         ),
                       ],
                     )
                   : null,
             ),
             if (widget.isUser && !_isEditing)
-              IconButton(
-                onPressed: _startEditing,
-                icon: Icon(
-                  Icons.edit,
-                  color: isDarkMode
-                      ? AppThemes.primaryTextDark
-                      : AppThemes.primaryTextLight,
-                ),
-              ),
+              IconButton(onPressed: _startEditing, icon: Icon(Icons.edit)),
           ],
         ),
       ],
