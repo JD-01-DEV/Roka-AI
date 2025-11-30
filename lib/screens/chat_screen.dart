@@ -203,10 +203,7 @@ class __ChatScreenState extends State<ChatScreen> {
                         ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 20,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: ListView.builder(
                               controller: _chatScrollController,
                               itemCount: chatProvider.sessions.length,
@@ -302,19 +299,6 @@ class __ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            // child: ListView.builder(
-            //   controller: _messageScrollController,
-            //   itemCount: chatProvider.messages.length,
-            //   itemBuilder: (context, index) {
-            //     final msg = chatProvider.messages[index];
-            //     if (index == chatProvider.messages.length - 1) {
-            //       WidgetsBinding.instance.addPostFrameCallback((_) {
-            //         _scrollToBottom(force: true);
-            //       });
-            //     }
-            //     return MessageBubble(content: msg.content, isUser: msg.isUser);
-            //   },
-            // ),
             child: Consumer<ChatProvider>(
               builder: (context, chatProvider, child) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -372,73 +356,76 @@ class __ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-        ],
-      ),
-      bottomNavigationBar: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              margin: EdgeInsets.only(left: 10, bottom: 20),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? AppThemes.secondaryDark
-                    : AppThemes.secondaryLight,
-                borderRadius: const BorderRadius.all(Radius.circular(50)),
-              ),
-              child: TextField(
-                controller: _messageController,
-                onSubmitted: (_) => _sendMessage(chatProvider),
-                focusNode: _focusNode,
-                decoration: InputDecoration(
-                  hintText: "Ask any thing ...",
-                  hintStyle: TextStyle(
-                    color: isDarkMode
-                        ? AppThemes.secondaryTextDark
-                        : AppThemes.secondaryTextLight,
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
                   ),
-                  contentPadding: EdgeInsets.only(left: 25),
-                  border: InputBorder.none,
+                  margin: EdgeInsets.only(left: 10, bottom: 20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? AppThemes.secondaryDark
+                        : AppThemes.secondaryLight,
+                    borderRadius: const BorderRadius.all(Radius.circular(50)),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    onSubmitted: (_) => _sendMessage(chatProvider),
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: "Ask any thing ...",
+                      hintStyle: TextStyle(
+                        color: isDarkMode
+                            ? AppThemes.secondaryTextDark
+                            : AppThemes.secondaryTextLight,
+                      ),
+                      contentPadding: EdgeInsets.only(left: 25),
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? AppThemes.secondaryDark
-                  : AppThemes.secondaryLight,
-              borderRadius: const BorderRadius.all(Radius.circular(50)),
-            ),
-            margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
-            child: IconButton(
-              icon: isLoading
-                  ? Icon(Icons.stop_circle_outlined, size: 30)
-                  : Icon(Icons.send),
-              onPressed: () async {
-                if (await context.read<AiModelDb>().isAnyModelLoaded()) {
-                  if (!isLoading ||
-                      context.read<ChatProvider>().hasResponseCompleted) {
-                    if (chatProvider.currentSessionId == null) {
-                      chatProvider.startNewSessions(
-                        "MyGGUFModel",
-                        "Chat ${DateTime.now().toString().substring(0, 10)}",
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? AppThemes.secondaryDark
+                      : AppThemes.secondaryLight,
+                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                ),
+                margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
+                child: IconButton(
+                  icon: isLoading
+                      ? Icon(Icons.stop_circle_outlined, size: 30)
+                      : Icon(Icons.send),
+                  onPressed: () async {
+                    if (await context.read<AiModelDb>().isAnyModelLoaded()) {
+                      if (!isLoading ||
+                          context.read<ChatProvider>().hasResponseCompleted) {
+                        if (chatProvider.currentSessionId == null) {
+                          chatProvider.startNewSessions(
+                            "MyGGUFModel",
+                            "Chat ${DateTime.now().toString().substring(0, 10)}",
+                          );
+                        }
+                        _sendMessage(chatProvider);
+                        currentSessionId = chatProvider.currentSessionId;
+                      } else {
+                        ApiService.stopStream();
+                        setState(() => isLoading = false);
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Load the model first.")),
                       );
                     }
-                    _sendMessage(chatProvider);
-                    currentSessionId = chatProvider.currentSessionId;
-                  } else {
-                    ApiService.stopStream();
-                    setState(() => isLoading = false);
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Load the model first.")),
-                  );
-                }
-              },
-            ),
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

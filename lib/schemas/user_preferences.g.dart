@@ -26,6 +26,11 @@ const UserPreferencesSchema = CollectionSchema(
       id: 1,
       name: r'languageCode',
       type: IsarType.string,
+    ),
+    r'serverAddress': PropertySchema(
+      id: 2,
+      name: r'serverAddress',
+      type: IsarType.string,
     )
   },
   estimateSize: _userPreferencesEstimateSize,
@@ -63,6 +68,7 @@ int _userPreferencesEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.languageCode.length * 3;
+  bytesCount += 3 + object.serverAddress.length * 3;
   return bytesCount;
 }
 
@@ -74,6 +80,7 @@ void _userPreferencesSerialize(
 ) {
   writer.writeBool(offsets[0], object.isDarkMode);
   writer.writeString(offsets[1], object.languageCode);
+  writer.writeString(offsets[2], object.serverAddress);
 }
 
 UserPreferences _userPreferencesDeserialize(
@@ -86,6 +93,7 @@ UserPreferences _userPreferencesDeserialize(
   object.id = id;
   object.isDarkMode = reader.readBool(offsets[0]);
   object.languageCode = reader.readString(offsets[1]);
+  object.serverAddress = reader.readString(offsets[2]);
   return object;
 }
 
@@ -99,6 +107,8 @@ P _userPreferencesDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -454,6 +464,142 @@ extension UserPreferencesQueryFilter
       ));
     });
   }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'serverAddress',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'serverAddress',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'serverAddress',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'serverAddress',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterFilterCondition>
+      serverAddressIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'serverAddress',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension UserPreferencesQueryObject
@@ -489,6 +635,20 @@ extension UserPreferencesQuerySortBy
       sortByLanguageCodeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'languageCode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterSortBy>
+      sortByServerAddress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverAddress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterSortBy>
+      sortByServerAddressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverAddress', Sort.desc);
     });
   }
 }
@@ -534,6 +694,20 @@ extension UserPreferencesQuerySortThenBy
       return query.addSortBy(r'languageCode', Sort.desc);
     });
   }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterSortBy>
+      thenByServerAddress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverAddress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QAfterSortBy>
+      thenByServerAddressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'serverAddress', Sort.desc);
+    });
+  }
 }
 
 extension UserPreferencesQueryWhereDistinct
@@ -549,6 +723,14 @@ extension UserPreferencesQueryWhereDistinct
       distinctByLanguageCode({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'languageCode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<UserPreferences, UserPreferences, QDistinct>
+      distinctByServerAddress({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'serverAddress',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -571,6 +753,13 @@ extension UserPreferencesQueryProperty
       languageCodeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'languageCode');
+    });
+  }
+
+  QueryBuilder<UserPreferences, String, QQueryOperations>
+      serverAddressProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'serverAddress');
     });
   }
 }

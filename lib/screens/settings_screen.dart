@@ -20,6 +20,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double titleSize = 18;
   double subTitleSize = 12;
 
+  final RegExp serverAddressRegex = RegExp(
+    r'^(https?):\/\/' // http or https
+    r'((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|' // hostname
+    r'(\d{1,3}(\.\d{1,3}){3}))' // OR IPv4
+    r':([0-9]{1,5})$', // port (1-5 digits)
+  );
+
   final _serverTextFieldController = TextEditingController();
 
   @override
@@ -81,7 +88,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               splashRadius: 5,
             ),
           ),
-
           SettingOptionTile(
             title: Text(
               "Server Address",
@@ -94,12 +100,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: TextField(
                 controller: _serverTextFieldController,
                 decoration: InputDecoration(
-                  hintText: ApiService.server,
+                  hintText: serverAddress,
                   border: OutlineInputBorder(borderSide: BorderSide.none),
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(horizontal: 10),
                 ),
-                onSubmitted: (value) => ApiService.server = value,
+                onSubmitted: (value) async {
+                  if (serverAddressRegex.hasMatch(value)) {
+                    await context
+                        .read<UserPreferencesProvider>()
+                        .updateServerAddress(value);
+                    setState(() {});
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Invalid server address")),
+                    );
+                  }
+                },
               ),
             ),
           ),

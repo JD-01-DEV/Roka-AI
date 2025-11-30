@@ -19,6 +19,7 @@ import 'package:localgpt/screens/settings_screen.dart';
 
 late Isar isar; // creating Isar variable named isar
 bool isDarkMode = true;
+String serverAddress = "http://127.0.0.1:8000";
 
 // it the main function that runs / starts the app
 void main() async {
@@ -35,7 +36,9 @@ void main() async {
   ], directory: dir.path);
 
   final prefs = await isar.userPreferences.get(0);
-  final isDarkMode = prefs?.isDarkMode ?? true;
+  isDarkMode = prefs?.isDarkMode ?? true;
+
+  serverAddress = prefs?.serverAddress ?? "http://127.0.0.1:8000";
 
   // this func is from material.dart which runs the app
   runApp(
@@ -67,7 +70,7 @@ void main() async {
 
 class App extends StatelessWidget {
   bool isDarkMode;
-   App({required this.isDarkMode, super.key});
+  App({required this.isDarkMode, super.key});
 
   @override
   Widget build(BuildContext context) {

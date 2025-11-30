@@ -5,3 +5,4 @@
 # But not these files/folders...
 !/lib/
 !/pubspec.yaml
+!/android

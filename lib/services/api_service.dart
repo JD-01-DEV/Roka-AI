@@ -1,8 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:localgpt/main.dart';
+
 class ApiService {
-  static String server = "http://127.0.0.1:8000"; // defining server adress
+  static String server = serverAddress;
 
   // Optional: a non-streaming helper that just collects the streamed text
   static Future<String> sendPrompt(

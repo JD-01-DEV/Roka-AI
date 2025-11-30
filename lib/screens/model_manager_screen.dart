@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:localgpt/databases/ai_model_db.dart';
 import 'package:localgpt/main.dart';
 import 'package:localgpt/schemas/ai_model_model.dart';
@@ -44,11 +47,10 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
   Future<void> _addModel() async {
     if (_isPickingFile) return;
     setState(() => _isPickingFile = true);
-    debugPrint("Is Picking File? =  $_isPickingFile");
-    // getting model from storage as result
+
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom, // allows to pick / choose custom file format
-      allowedExtensions: ['gguf'], //only GGUF models are allowed
+      type: FileType.custom,
+      allowedExtensions: ['gguf'],
     );
 
     if (result == null || result.files.isEmpty) {
@@ -56,67 +58,84 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
         context,
       ).showSnackBar(SnackBar(content: Text("No model added")));
       setState(() => _isPickingFile = false);
-      debugPrint("Is Picking File? =  $_isPickingFile");
       return;
     }
 
-    // if model file selected and the file is not empty then
+    final file = result.files.single;
+    final filePath = file.path;
+    final fileName = file.name;
 
-    final file = result.files.single; // setting file informations
-    final filePath = file.path; // getting file path
-    final fileName = file.name; // file name
-    final fileSize =
-        "${(file.size / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB"; // and size of file in GB
-
-    final indexOfDot = fileName.lastIndexOf(
-      ".",
-    ); // modifying file name to exlude extention ( GGUF )
-
-    final filteredFileName =
-        indexOfDot !=
-            -1 // if find index of a ' . ' symbol that represents extention afterwards at last then
-        ? fileName.substring(0, indexOfDot) // filted name
-        : fileName; // and if couldn't then full / original file name
-    final modelParameters = extractParams(fileName);
-
-    if (fileName.substring(indexOfDot) != "gguf") {
+    if (fileName.endsWith(".gguf") == false) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Only guff files are allowed")));
+      ).showSnackBar(SnackBar(content: Text("Only .gguf files are allowed")));
+      setState(() => _isPickingFile = false);
+      return;
     }
-    ;
 
-    // creating new AiModel with available info.
+    // Upload the file to the server
+    bool uploadSuccess = await _uploadModelFile(filePath!);
+    if (!uploadSuccess) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to upload model")));
+      setState(() => _isPickingFile = false);
+      return;
+    }
+
+    final fileSize =
+        "${(file.size / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB";
+    final indexOfDot = fileName.lastIndexOf(".");
+    final filteredFileName = indexOfDot != -1
+        ? fileName.substring(0, indexOfDot)
+        : fileName;
+    final modelParameters = extractParams(fileName);
+
     final aiModel = AiModel()
       ..name = filteredFileName
       ..size = fileSize
       ..dateAdded = DateTime.now()
-      ..filePath = filePath!
+      ..filePath =
+          "/tmp/$fileName" // Use the server-side path
       ..parameters = modelParameters
       ..isLoaded = false;
 
     for (var model in _modelsInApp) {
       if (aiModel.name == model) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${aiModel.name} already exist")),
+          SnackBar(content: Text("${aiModel.name} already exists")),
         );
         setState(() => _isPickingFile = false);
-        debugPrint("Is Picking File? =  $_isPickingFile");
         return;
       }
     }
 
     _modelsInApp.add(aiModel.name);
-    _isPickingFile = false;
+    await context.read<AiModelDb>().addModelToDb(aiModel);
 
-    await context.read<AiModelDb>().addModelToDb(
-      aiModel,
-    ); // awaiting for AiModelDb to add Model to DB
-
-    // showing a message using snackbar
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text("${aiModel.name} added")));
+
+    setState(() => _isPickingFile = false);
+  }
+
+  // Helper function to upload the model file
+  Future<bool> _uploadModelFile(String filePath) async {
+    try {
+      var request = http.MultipartRequest(
+        "POST",
+        Uri.parse("${ApiService.server}/add_model"),
+      );
+      request.files.add(await http.MultipartFile.fromPath("file", filePath));
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final data = json.decode(responseBody);
+      return data["status"] == "success";
+    } catch (e) {
+      debugPrint("Upload error: $e");
+      return false;
+    }
   }
 
   Future<void> _handleModelLoading(String path, int modelId) async {

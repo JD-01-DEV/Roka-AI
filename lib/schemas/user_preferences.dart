@@ -10,4 +10,6 @@ class UserPreferences {
   bool isDarkMode = false;
 
   String languageCode = 'en'; // e.g. "en", "hi", "es"
+
+  String serverAddress = "http://127.0.0.1:8000";
 }
