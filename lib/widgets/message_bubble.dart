@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:localgpt/providers/chat_provider.dart';
-import 'package:localgpt/databases/ai_model_db.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/themes/app_themes.dart';
 import 'package:provider/provider.dart';
 
 class MessageBubble extends StatefulWidget {
@@ -87,7 +89,13 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: widget.isUser ? Colors.blueAccent : Colors.grey[800],
+                    color: widget.isUser
+                        ? isDarkMode
+                              ? AppThemes.accentDark
+                              : AppThemes.accentLight
+                        : isDarkMode
+                        ? AppThemes.primaryDark
+                        : AppThemes.primarylight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.all(12),
@@ -141,7 +149,13 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: widget.isUser ? Colors.blueAccent : Colors.grey[800],
+                    color: widget.isUser
+                        ? isDarkMode
+                              ? AppThemes.accentDark
+                              : AppThemes.accentLight
+                        : isDarkMode
+                        ? AppThemes.secondaryDark
+                        : AppThemes.secondaryLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.all(12),
@@ -150,7 +164,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                   child: SelectableText(
                     widget.content,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),

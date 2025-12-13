@@ -1,9 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// import 'package:roka_ai/main.dart';
+
 class ApiService {
-  static const String server =
-      "http://localhost:8000"; // defining server adress
+  static String server = "";
 
   // Optional: a non-streaming helper that just collects the streamed text
   static Future<String> sendPrompt(

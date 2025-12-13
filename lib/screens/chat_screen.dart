@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/providers/chat_provider.dart';
-import 'package:localgpt/databases/ai_model_db.dart';
-import 'package:localgpt/schemas/chat_session_model.dart';
-import 'package:localgpt/services/api_service.dart';
-import 'package:localgpt/widgets/message_bubble.dart';
-import 'package:localgpt/widgets/model_options.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/providers/user_preferences_provider.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
+import 'package:roka_ai/services/api_service.dart';
+import 'package:roka_ai/themes/app_themes.dart';
+import 'package:roka_ai/widgets/message_bubble.dart';
+import 'package:roka_ai/widgets/model_options.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -31,6 +34,12 @@ class __ChatScreenState extends State<ChatScreen> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     context.read<AiModelDb>().resetOnStartup();
+    // Fetch the dark mode preference when the app starts
+    final provider = Provider.of<UserPreferencesProvider>(
+      context,
+      listen: false,
+    );
+    provider.getIsDarkMode();
   }
 
   // diposing / deleting controllers and focus variables when app closes
@@ -118,6 +127,7 @@ class __ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
     final chatProvider = Provider.of<ChatProvider>(
       context,
     ); // getting chatProvider at the start of app
@@ -126,13 +136,15 @@ class __ChatScreenState extends State<ChatScreen> {
         child: Column(
           children: [
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                padding: EdgeInsets.symmetric(vertical: 10),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (_) => _onSearchChanged(),
                   decoration: InputDecoration(
                     hintText: "Search",
+                    hintStyle: TextStyle(),
                     prefixIcon: Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -151,9 +163,10 @@ class __ChatScreenState extends State<ChatScreen> {
                             itemBuilder: (context, index) {
                               final session = _searchResults[index];
                               return ListTile(
-                                title: Text(session.title),
+                                title: Text(session.title, style: TextStyle()),
                                 subtitle: Text(
                                   session.createdAt.toString().substring(0, 16),
+                                  style: TextStyle(),
                                 ),
                                 onTap: () {
                                   Navigator.pop(context);
@@ -162,46 +175,77 @@ class __ChatScreenState extends State<ChatScreen> {
                               );
                             },
                           )
-                        : Center(child: Text("No Result found")))
+                        : Center(
+                            child: Text("No Result found", style: TextStyle()),
+                          ))
                   : Column(
                       children: [
-                        ListTile(
-                          leading: Icon(Icons.chat_bubble_outline),
-                          title: Text("New Chat"),
-                          onTap: () => _newChat(chatProvider),
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.view_comfy_alt_outlined),
-                          title: Text("Models"),
-                          onTap: () =>
-                              Navigator.pushNamed(context, '/model_manager'),
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.message),
-                          title: Text("Chats"),
+                        Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(Icons.chat_bubble_outline),
+                              title: Text("New Chat", style: TextStyle()),
+                              onTap: () => _newChat(chatProvider),
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.view_comfy_alt_outlined),
+                              title: Text("Models", style: TextStyle()),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/model_manager',
+                              ),
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.message),
+                              title: Text("Chats", style: TextStyle()),
+                            ),
+                          ],
                         ),
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 15,
-                              vertical: 20,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: ListView.builder(
                               controller: _chatScrollController,
                               itemCount: chatProvider.sessions.length,
                               itemBuilder: (context, index) {
                                 final session = chatProvider.sessions[index];
-                                return ListTile(
-                                  title: Text(session.title),
-                                  subtitle: Text(session.modelUsed),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    chatProvider.loadMessages(session.id);
-                                  },
-                                  trailing: IconButton(
-                                    onPressed: () =>
-                                        chatProvider.deleteSession(session.id),
-                                    icon: Icon(Icons.delete),
+                                return Container(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? AppThemes.secondaryDark
+                                        : AppThemes.secondaryLight,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    title: Text(
+                                      session.title,
+                                      style: TextStyle(),
+                                    ),
+                                    subtitle: Text(
+                                      session.modelUsed,
+                                      style: TextStyle(),
+                                    ),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      chatProvider.loadMessages(session.id);
+                                    },
+                                    // trailing: IconButton(
+                                    //   onPressed: () => chatProvider
+                                    //       .deleteSession(session.id),
+                                    //   icon: Icon(Icons.delete),
+                                    // ),
+                                    trailing: IconButton(
+                                      onPressed: () {
+                                        context
+                                            .read<ChatProvider>()
+                                            .deleteSession(session.id);
+                                      },
+                                      icon: Icon(Icons.delete),
+                                    ),
                                   ),
                                 );
                               },
@@ -227,7 +271,15 @@ class __ChatScreenState extends State<ChatScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Center(child: Text("Local GPT")),
+        title: Center(child: Text("Róka AI", style: TextStyle())),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              onPressed: Scaffold.of(context).openDrawer,
+              icon: Icon(Icons.menu_outlined),
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: MenuOptions(),
@@ -247,19 +299,6 @@ class __ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            // child: ListView.builder(
-            //   controller: _messageScrollController,
-            //   itemCount: chatProvider.messages.length,
-            //   itemBuilder: (context, index) {
-            //     final msg = chatProvider.messages[index];
-            //     if (index == chatProvider.messages.length - 1) {
-            //       WidgetsBinding.instance.addPostFrameCallback((_) {
-            //         _scrollToBottom(force: true);
-            //       });
-            //     }
-            //     return MessageBubble(content: msg.content, isUser: msg.isUser);
-            //   },
-            // ),
             child: Consumer<ChatProvider>(
               builder: (context, chatProvider, child) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -317,38 +356,53 @@ class __ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          GestureDetector(
-            onTap: _focusNode.requestFocus,
-            child: Container(
-              width: double.infinity,
-              height: 100,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(30.0),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      onSubmitted: (_) => _sendMessage(chatProvider),
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: "Ask any thing ...",
-                        hintStyle: TextStyle(color: Colors.white24),
-                        contentPadding: EdgeInsets.only(left: 25),
-                        border: InputBorder.none,
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  margin: EdgeInsets.only(left: 10, bottom: 20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? AppThemes.secondaryDark
+                        : AppThemes.secondaryLight,
+                    borderRadius: const BorderRadius.all(Radius.circular(50)),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    onSubmitted: (_) => _sendMessage(chatProvider),
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: "Ask any thing ...",
+                      hintStyle: TextStyle(
+                        color: isDarkMode
+                            ? AppThemes.secondaryTextDark
+                            : AppThemes.secondaryTextLight,
                       ),
+                      contentPadding: EdgeInsets.only(left: 25),
+                      border: InputBorder.none,
                     ),
                   ),
-                  IconButton(
-                    icon: isLoading
-                        ? Icon(Icons.stop_circle_outlined, size: 30)
-                        : Icon(Icons.send),
-                    onPressed: () {
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? AppThemes.secondaryDark
+                      : AppThemes.secondaryLight,
+                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                ),
+                margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
+                child: IconButton(
+                  icon: isLoading
+                      ? Icon(Icons.stop_circle_outlined, size: 30)
+                      : Icon(Icons.send),
+                  onPressed: () async {
+                    if (await context.read<AiModelDb>().isAnyModelLoaded()) {
                       if (!isLoading ||
                           context.read<ChatProvider>().hasResponseCompleted) {
                         if (chatProvider.currentSessionId == null) {
@@ -363,11 +417,15 @@ class __ChatScreenState extends State<ChatScreen> {
                         ApiService.stopStream();
                         setState(() => isLoading = false);
                       }
-                    },
-                  ),
-                ],
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Load the model first.")),
+                      );
+                    }
+                  },
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

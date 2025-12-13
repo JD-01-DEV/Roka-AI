@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/providers/chat_provider.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
 
 class MenuOptions extends StatefulWidget {
@@ -14,7 +14,7 @@ class _ModelOptionsState extends State<MenuOptions> {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
-      icon: const Icon(Icons.more_vert),
+      icon: const Icon(Icons.more_horiz),
       itemBuilder: (context) => [
         PopupMenuItem(
           value: 'settings',

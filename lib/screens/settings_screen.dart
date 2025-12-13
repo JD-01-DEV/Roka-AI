@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/user_preferences_provider.dart';
+// import 'package:roka_ai/services/api_service.dart';
+// import 'package:roka_ai/themes/app_themes.dart';
+import 'package:roka_ai/widgets/setting_option_tile.dart';
+import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -8,67 +14,124 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _darkTheme = true; // will be helpful for toggling themes
-  String _language = "English"; // default language is English
+  String currenetLanguage = "English";
+
+  double iconSize = 30;
+  double titleSize = 18;
+  double subTitleSize = 12;
+
+  final RegExp serverAddressRegex = RegExp(
+    r'^(https?):\/\/' // http or https
+    r'((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|' // hostname
+    r'(\d{1,3}(\.\d{1,3}){3}))' // OR IPv4
+    r':([0-9]{1,5})$', // port (1-5 digits)
+  );
+
+  final _serverTextFieldController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    isDarkMode = context.read<UserPreferencesProvider>().isDark;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Settings"),
+        title: Text("Settings", style: TextStyle()),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(Icons.arrow_back),
         ),
       ),
-      body: ListView(
+      body: Column(
         children: [
-          SwitchListTile(
-            title: Text("Dark Theme", style: TextStyle(fontSize: 20)),
-            value: _darkTheme,
-            onChanged: (value) {
-              setState(() {
-                _darkTheme = value;
-              });
-            },
+          SettingOptionTile(
+            title: Text("Dark Theme", style: TextStyle(fontSize: titleSize)),
+            leading: Icon(Icons.dark_mode_outlined, size: iconSize),
+            trailing: Switch(
+              value: isDarkMode,
+              onChanged: (value) async {
+                await context.read<UserPreferencesProvider>().toggleTheme(
+                  value,
+                );
+                setState(() {
+                  isDarkMode = value;
+                  debugPrint("$isDarkMode");
+                });
+              },
+            ),
           ),
-          ListTile(
-            title: Text("Language", style: TextStyle(fontSize: 20)),
-            subtitle: Text(_language),
-            trailing: Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text("Select Languange"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      RadioListTile(
-                        title: Text("English"),
-                        value: 'English',
-                        groupValue: _language,
-                        onChanged: (value) => setState(() {
-                          _language = value.toString();
-                        }),
-                      ),
-                      RadioListTile(
-                        title: Text("Italian"),
-                        value: 'Italian',
-                        groupValue: _language,
-                        onChanged: (value) => setState(() {
-                          _language = value.toString();
-                        }),
-                      ),
-                    ],
-                  ),
+          SettingOptionTile(
+            title: Text("Language", style: TextStyle(fontSize: titleSize)),
+            leading: Icon(Icons.language, size: iconSize),
+            trailing: PopupMenuButton<String>(
+              icon: Icon(Icons.arrow_drop_down_circle_outlined, size: iconSize),
+              initialValue: currenetLanguage,
+              onSelected: (value) => (),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: "English",
+                  child: Text("English", style: TextStyle()),
                 ),
-              );
-            },
+                PopupMenuItem(
+                  value: "Italian",
+                  child: Text("Italian", style: TextStyle()),
+                ),
+                PopupMenuItem(value: "Hindi", child: Text("Hindi")),
+                PopupMenuItem(
+                  value: "Gujarati",
+                  child: Text("Gujarati", style: TextStyle()),
+                ),
+              ],
+              menuPadding: EdgeInsets.all(10),
+              // borderRadius: BorderRadius.only(
+              //   topLeft: Radius.circular(50),
+              //   bottomRight: Radius.circular(20),
+              // ),
+              splashRadius: 5,
+            ),
           ),
-          ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text("About", style: TextStyle(fontSize: 20)),
-            subtitle: Text("Local GPT version 1.0"),
+          SettingOptionTile(
+            title: Text(
+              "Server Address",
+              style: TextStyle(fontSize: titleSize),
+            ),
+            leading: Icon(Icons.cloud_outlined, size: iconSize),
+            trailing: SizedBox(
+              // Use SizedBox or ConstrainedBox to control the width
+              width: 150, // Set a reasonable width
+              child: TextField(
+                controller: _serverTextFieldController,
+                decoration: InputDecoration(
+                  hintText: "serverAddress",
+                  border: OutlineInputBorder(borderSide: BorderSide.none),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                ),
+                onSubmitted: (value) async {
+                  if (serverAddressRegex.hasMatch(value)) {
+                    await context
+                        .read<UserPreferencesProvider>()
+                        .updateServerAddress(value);
+                    setState(() {});
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Invalid server address")),
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
+          SettingOptionTile(
+            title: Text("About", style: TextStyle(fontSize: titleSize)),
+            subTitle: Row(
+              spacing: 8,
+              children: [
+                Text("Local GPT", style: TextStyle(fontSize: subTitleSize)),
+                Icon(Icons.circle, size: 5),
+                Text("Version 1.0", style: TextStyle(fontSize: subTitleSize)),
+              ],
+            ),
+            leading: Icon(Icons.info_outline, size: iconSize),
+            overridePaddingV: 2,
           ),
         ],
       ),
