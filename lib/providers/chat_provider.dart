@@ -1,10 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:localgpt/databases/chat_message_db.dart';
-import 'package:localgpt/databases/chat_session_db.dart';
-import 'package:localgpt/schemas/chat_session_model.dart';
-import 'package:localgpt/services/api_service.dart';
+import 'package:flutter/material.dart';
+import 'package:roka_ai/databases/chat_message_db.dart';
+import 'package:roka_ai/databases/chat_session_db.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
+//import 'package:roka_ai/services/api_service.dart';
+//import 'package:roka_ai/services/api_service.dart';
 
 class ChatProvider extends ChangeNotifier {
   final ChatSessionDb _chatSessionDb;
@@ -85,12 +88,20 @@ class ChatProvider extends ChangeNotifier {
 
     final fullPrompt = history != null ? jsonEncode(history) : userText;
 
-    await for (final chunk in ApiService.streamPrompt(fullPrompt)) {
+    // await for (final chunk in ApiService.streamPrompt(fullPrompt)) {
+    //   buffer.write(chunk);
+    //   await _chatMessageDb.updateMessageContent(botId, buffer.toString());
+    //   // Optional: avoid over-notifying; DB already notifies on update
+    //   await loadMessages(sessionId);
+    // }
+
+    await for (final chunk in llamaManager.streamResponse(fullPrompt)) {
       buffer.write(chunk);
       await _chatMessageDb.updateMessageContent(botId, buffer.toString());
       // Optional: avoid over-notifying; DB already notifies on update
       await loadMessages(sessionId);
     }
+
     hasResponseCompleted = true;
   }
 
@@ -116,10 +127,13 @@ class ChatProvider extends ChangeNotifier {
         "Generate a short 3–5 word title for this conversation (make sure to not to response any other word than title):\n\n$userText";
 
     final buffer = StringBuffer();
-    await for (final chunk in ApiService.streamPrompt(
-      prompt,
-      maxTokens: 1024,
-    )) {
+    // await for (final chunk in ApiService.streamPrompt(
+    //   prompt,
+    //   maxTokens: 1024,
+    // )) {
+    //   buffer.write(chunk);
+    // }
+    await for (final chunk in llamaManager.streamResponse(prompt)) {
       buffer.write(chunk);
     }
 

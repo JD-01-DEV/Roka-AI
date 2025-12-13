@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:localgpt/providers/chat_provider.dart';
+//import 'package:llama_cpp_dart/llama_cpp_dart.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
 
-import 'package:localgpt/databases/ai_model_db.dart';
-import 'package:localgpt/providers/user_preferences_provider.dart';
-import 'package:localgpt/schemas/chat_session_model.dart';
-import 'package:localgpt/schemas/user_preferences.dart';
-import 'package:localgpt/themes/app_themes.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/providers/user_preferences_provider.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
+import 'package:roka_ai/schemas/user_preferences.dart';
+import 'package:roka_ai/services/llama_manager.dart';
+import 'package:roka_ai/themes/app_themes.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'package:localgpt/databases/chat_message_db.dart';
-import 'package:localgpt/databases/chat_session_db.dart';
-import 'package:localgpt/schemas/ai_model_model.dart';
-import 'package:localgpt/screens/model_manager_screen.dart';
-import 'package:localgpt/screens/chat_screen.dart';
-import 'package:localgpt/screens/settings_screen.dart';
+import 'package:roka_ai/databases/chat_message_db.dart';
+import 'package:roka_ai/databases/chat_session_db.dart';
+import 'package:roka_ai/schemas/ai_model_model.dart';
+import 'package:roka_ai/screens/model_manager_screen.dart';
+import 'package:roka_ai/screens/chat_screen.dart';
+import 'package:roka_ai/screens/settings_screen.dart';
 
 late Isar isar; // creating Isar variable named isar
 bool isDarkMode = true;
-String serverAddress = "http://127.0.0.1:8000";
+// String serverAddress = "http://127.0.0.1:8000";
+
+final llamaManager = LlamaManager();
 
 // it the main function that runs / starts the app
 void main() async {
@@ -38,7 +42,7 @@ void main() async {
   final prefs = await isar.userPreferences.get(0);
   isDarkMode = prefs?.isDarkMode ?? true;
 
-  serverAddress = prefs?.serverAddress ?? "http://127.0.0.1:8000";
+  // serverAddress = prefs?.serverAddress ?? "http://127.0.0.1:8000";
 
   // this func is from material.dart which runs the app
   runApp(
@@ -61,9 +65,7 @@ void main() async {
         ),
         ChangeNotifierProvider(create: (_) => UserPreferencesProvider(isar)),
       ],
-      child: App(
-        isDarkMode: isDarkMode,
-      ), // assinging APP as child to provider so it can be run by runApp function
+      child: App(isDarkMode: isDarkMode),
     ),
   );
 }
@@ -74,6 +76,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    llamaManager.setLibraryPath();
     isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
     return Consumer<UserPreferencesProvider>(
       builder: (context, provider, child) {

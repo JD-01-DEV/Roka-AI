@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/main.dart';
-import 'package:localgpt/providers/chat_provider.dart';
-import 'package:localgpt/databases/ai_model_db.dart';
-import 'package:localgpt/providers/user_preferences_provider.dart';
-import 'package:localgpt/schemas/chat_session_model.dart';
-import 'package:localgpt/services/api_service.dart';
-import 'package:localgpt/themes/app_themes.dart';
-import 'package:localgpt/widgets/message_bubble.dart';
-import 'package:localgpt/widgets/model_options.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/providers/user_preferences_provider.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
+import 'package:roka_ai/services/api_service.dart';
+import 'package:roka_ai/themes/app_themes.dart';
+import 'package:roka_ai/widgets/message_bubble.dart';
+import 'package:roka_ai/widgets/model_options.dart';
 import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -271,7 +271,7 @@ class __ChatScreenState extends State<ChatScreen> {
         ),
       ),
       appBar: AppBar(
-        title: Center(child: Text("Local GPT", style: TextStyle())),
+        title: Center(child: Text("Róka AI", style: TextStyle())),
         leading: Builder(
           builder: (context) {
             return IconButton(

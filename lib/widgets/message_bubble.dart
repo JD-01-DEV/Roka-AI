@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:localgpt/main.dart';
-import 'package:localgpt/providers/chat_provider.dart';
-import 'package:localgpt/databases/ai_model_db.dart';
-import 'package:localgpt/themes/app_themes.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/themes/app_themes.dart';
 import 'package:provider/provider.dart';
 
 class MessageBubble extends StatefulWidget {

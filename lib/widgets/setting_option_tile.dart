@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/main.dart';
-import 'package:localgpt/themes/app_themes.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/themes/app_themes.dart';
 
 class SettingOptionTile extends StatefulWidget {
   Widget title;

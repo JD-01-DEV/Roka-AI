@@ -1,10 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:localgpt/main.dart';
+// import 'package:roka_ai/main.dart';
 
 class ApiService {
-  static String server = serverAddress;
+  static String server = "";
 
   // Optional: a non-streaming helper that just collects the streamed text
   static Future<String> sendPrompt(

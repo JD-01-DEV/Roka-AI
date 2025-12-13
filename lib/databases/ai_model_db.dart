@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart'; // for ChangeNotifier
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart'; // for Isar
-import 'package:localgpt/schemas/ai_model_model.dart'; // AiModel schema to perform CRUD on it
+import 'package:roka_ai/schemas/ai_model_model.dart'; // AiModel schema to perform CRUD on it
 
 // A data manipulation handler class to do CRUD operations
 class AiModelDb extends ChangeNotifier {

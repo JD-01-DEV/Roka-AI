@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/main.dart';
-import 'package:localgpt/providers/user_preferences_provider.dart';
-import 'package:localgpt/services/api_service.dart';
-import 'package:localgpt/themes/app_themes.dart';
-import 'package:localgpt/widgets/setting_option_tile.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/providers/user_preferences_provider.dart';
+// import 'package:roka_ai/services/api_service.dart';
+// import 'package:roka_ai/themes/app_themes.dart';
+import 'package:roka_ai/widgets/setting_option_tile.dart';
 import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: TextField(
                 controller: _serverTextFieldController,
                 decoration: InputDecoration(
-                  hintText: serverAddress,
+                  hintText: "serverAddress",
                   border: OutlineInputBorder(borderSide: BorderSide.none),
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(horizontal: 10),

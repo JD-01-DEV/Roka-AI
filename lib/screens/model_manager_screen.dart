@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:localgpt/databases/ai_model_db.dart';
-import 'package:localgpt/main.dart';
-import 'package:localgpt/schemas/ai_model_model.dart';
-import 'package:localgpt/themes/app_themes.dart';
-import 'package:localgpt/widgets/model_tile.dart';
-import 'package:localgpt/services/api_service.dart';
-import 'package:localgpt/widgets/parameter_dialog.dart';
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/main.dart';
+import 'package:roka_ai/schemas/ai_model_model.dart';
+import 'package:roka_ai/themes/app_themes.dart';
+import 'package:roka_ai/widgets/model_tile.dart';
+import 'package:roka_ai/services/api_service.dart';
+import 'package:roka_ai/widgets/parameter_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ModelManagerScreen extends StatefulWidget {
@@ -154,10 +154,11 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
   Future<void> _loadModel(String path, int modelId) async {
     final db = context.read<AiModelDb>();
 
-    final loaded = await ApiService.loadModel(
-      path,
-    ); // loading model using path through ApiSevice
+    // final loaded = await ApiService.loadModel(
+    //   path,
+    // ); // loading model using path through ApiSevice
 
+    final loaded = await llamaManager.laodModel(path);
     // if model is loaded then
     if (loaded) {
       await db.setActiveModel(modelId); // ensures only this model is active
@@ -178,7 +179,8 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
   Future<void> _unloadModel(int modelId) async {
     final db = context.read<AiModelDb>();
 
-    final unLoaded = await ApiService.unloadModel();
+    // final unLoaded = await ApiService.unloadModel();
+    final unLoaded = await llamaManager.unloadModel();
     if (unLoaded) {
       await db.unloadModel(modelId);
     }

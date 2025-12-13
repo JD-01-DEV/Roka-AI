@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:isar/isar.dart';
-import 'package:localgpt/schemas/chat_session_model.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
 
 class ChatMessageDb extends ChangeNotifier {
   final Isar _isar;

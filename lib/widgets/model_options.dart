@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:localgpt/providers/chat_provider.dart';
+import 'package:roka_ai/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
 
 class MenuOptions extends StatefulWidget {

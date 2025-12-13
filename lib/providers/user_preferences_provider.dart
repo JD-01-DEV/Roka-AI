@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:localgpt/schemas/user_preferences.dart';
+import 'package:roka_ai/schemas/user_preferences.dart';
 
 class UserPreferencesProvider extends ChangeNotifier {
   final Isar _isar;
