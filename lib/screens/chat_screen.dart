@@ -414,7 +414,8 @@ class __ChatScreenState extends State<ChatScreen> {
                         _sendMessage(chatProvider);
                         currentSessionId = chatProvider.currentSessionId;
                       } else {
-                        ApiService.stopStream();
+                        // ApiService.stopStream();
+                        llamaManager.stopStream();
                         setState(() => isLoading = false);
                       }
                     } else {

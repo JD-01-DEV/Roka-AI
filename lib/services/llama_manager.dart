@@ -8,6 +8,8 @@ class LlamaManager extends ChangeNotifier {
   String libraryPath = "";
   String? modelPath;
   LlamaParent? _llamaParent;
+  StreamSubscription? _streamSub;
+  StreamController<String>? _controller;
 
   void setLibraryPath() {
     if (Platform.isAndroid) libraryPath = "";
@@ -24,16 +26,28 @@ class LlamaManager extends ChangeNotifier {
     debugPrint("Seted path to: $libraryPath");
   }
 
-  Future<bool> laodModel(String modelPath) async {
+  Future<bool> laodModel(
+    String modelPath, {
+    int nPredict = 2048,
+    int nCtx = 4096,
+    double topP = 0.9,
+    double minP = 0.05,
+  }) async {
     modelPath = modelPath;
 
     try {
       final loadCommand = LlamaLoad(
         path: modelPath,
         modelParams: ModelParams(),
-        contextParams: ContextParams(),
-        samplingParams: SamplerParams(),
+        contextParams: ContextParams()
+          ..nPredict = nPredict
+          ..nCtx = nCtx,
+        samplingParams: SamplerParams()
+          ..topP = topP
+          ..minP = minP,
+        format: ChatMLFormat(),
       );
+
       _llamaParent = LlamaParent(loadCommand);
       await _llamaParent!.init();
       return true;
@@ -58,30 +72,35 @@ class LlamaManager extends ChangeNotifier {
       throw Exception("Model not loaded");
     }
 
-    final controller = StreamController<String>();
+    _controller = StreamController<String>();
 
-    final streamSub = _llamaParent!.stream.listen(
+    _streamSub = _llamaParent!.stream.listen(
       (token) {
-        controller.add(token);
+        _controller!.add(token);
       },
       onError: (e) {
-        controller.addError("Stream error: $e");
+        _controller!.addError("Stream error: $e");
       },
     );
 
     final completionSub = _llamaParent!.completions.listen((event) async {
       if (!event.success) {
-        controller.addError("Completion error: ${event.errorDetails}");
+        _controller!.addError("Completion error: ${event.errorDetails}");
       }
 
-      await controller.close();
+      await _controller!.close();
     });
 
     await _llamaParent!.sendPrompt(prompt);
 
-    yield* controller.stream;
+    yield* _controller!.stream;
 
-    await streamSub.cancel();
+    await _streamSub!.cancel();
     await completionSub.cancel();
+  }
+
+  void stopStream() {
+    _streamSub?.cancel();
+    _controller?.close();
   }
 }
