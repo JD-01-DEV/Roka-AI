@@ -4,5 +4,6 @@
 
 # But not these files/folders...
 !/lib/
+!/slib
 !/pubspec.yaml
 !/android
