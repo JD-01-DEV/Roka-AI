@@ -49,8 +49,8 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     setState(() => _isPickingFile = true);
 
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['gguf'],
+      // type: FileType.custom,
+      // allowedExtensions: ['gguf'],
     );
 
     if (result == null || result.files.isEmpty) {

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:llama_cpp_dart/llama_cpp_dart.dart';
+import 'package:path/path.dart' as path;
 
 class LlamaManager extends ChangeNotifier {
   String libraryPath = "";
@@ -11,13 +12,23 @@ class LlamaManager extends ChangeNotifier {
   StreamSubscription? _streamSub;
   StreamController<String>? _controller;
 
-  void setLibraryPath() {
-    if (Platform.isAndroid) libraryPath = "";
+  Future<void> setLibraryPath() async {
+    debugPrint("path: ${Directory.current.path}");
+    if (Platform.isAndroid) {
+      libraryPath = path.join(
+        Directory.current.path,
+        "slib/android/arn64-v8a/libllama.so",
+      );
+    }
     if (Platform.isIOS) libraryPath = "";
     if (Platform.isMacOS) libraryPath = "";
     if (Platform.isLinux) {
-      libraryPath =
-          "/home/jd01/Desktop/JD/Softwares/Projects/Codium/Flutter/test/lib/libllama.so.0";
+      // libraryPath =
+      //     "/home/jd01/Desktop/JD/Softwares/Projects/Codium/Flutter/test/lib/libllama.so.0";
+      libraryPath = path.join(Directory.current.path, "slib/linux/libllama.so");
+
+      // libraryPath =
+      //     "/home/jd01/Desktop/JD/Softwares/Projects/Codium/Flutter/róka.ai/slib/linux/libllama.so";
     }
     if (Platform.isWindows) libraryPath = "";
 
