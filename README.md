@@ -42,7 +42,7 @@ flutter run
 
 ## How to get Flutter SDK
 
-> All The instructions are from official documention: https://docs.flutter.dev/get-started/quick
+> All The instructions are from official documentation: https://docs.flutter.dev/get-started/quick
 
 ### Linux 
 #### Terminal
@@ -188,11 +188,11 @@ xcode-select --install
 
 2. **Connect** device using USB cable and allow **file transfer**.
 
-3. Enable **Devloper Mode** by tapping 9 times on Build version in About Device or similar, if not already then allow **USB debugging** and **Installtion through  USB** if available.
+3. Enable **Developer Mode** by tapping 9 times on Build version in About Device or similar, if not already then allow **USB debugging** and **Installation through  USB** if available.
 
 4. **Run / Build** the app and allow the **installation** on Android if asked.
 
-5. The will be built in seconds or minuts depending on your device.
+5. The will be built in seconds or minutes depending on your device.
 
 
 ## Debugging with Android Studio and AVD
@@ -205,7 +205,7 @@ xcode-select --install
 
 3. Choose the Device in your respective IDE.
 
-4. Run / Build App and see it in qction.
+4. Run / Build App and see it in action.
 
 
 ### AVD (Android Vertual Device)
@@ -213,12 +213,12 @@ xcode-select --install
 #### Linux and Mac OS
 1. Install Android Studio. See [How to Get and Setup Android Studio]()
 
-2. Add Android SDK path to repective shell config file
+2. Add Android SDK path to respective shell config file
 ~~~shell
 # SDK path
 export ANDROID_HOME=~/Android/Sdk
 
-# Complementry paths
+# Complementary paths
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/tools
 export PATH=$PATH:$ANDROID_HOME/tools/bin
@@ -246,7 +246,7 @@ emulator <Device Name>
 
 
 #### Windows
-Debugging through Android Studio is recommanded for Windows
+Debugging through Android Studio is recommended for Windows
 
 
 ## How to setup Android Studio
@@ -254,7 +254,7 @@ Debugging through Android Studio is recommanded for Windows
 ### Installaion
 
 #### Linux
-you can get **Android Studio** either from Flatpak / Snap / Homebrew / Official website in `deb` format. but my recommandation is to have it through `deb` package so that Android Studio can interact with Linux for debugging purpose.
+you can get **Android Studio** either from Flatpak / Snap / Homebrew / Official website in `deb` format. but my recommendation is to have it through `deb` package so that Android Studio can interact with Linux for debugging purpose.
 
 ***Deb:***
 
@@ -273,7 +273,7 @@ sudo dpkg -i android-studio-*-linux.deb
 #### Windows
 Download `exe` file from https://developer.android.com/studio and Extract the file:
 
-Follow installtion steps
+Follow installation steps
 
 
 #### Mac OS
