@@ -1,16 +1,18 @@
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+// import 'package:http/http.dart' as http;
 import 'package:roka_ai/databases/ai_model_db.dart';
 import 'package:roka_ai/main.dart';
 import 'package:roka_ai/schemas/ai_model_model.dart';
 import 'package:roka_ai/themes/app_themes.dart';
 import 'package:roka_ai/widgets/model_tile.dart';
-import 'package:roka_ai/services/api_service.dart';
+// import 'package:roka_ai/services/api_service.dart';
 import 'package:roka_ai/widgets/parameter_dialog.dart';
 import 'package:provider/provider.dart';
+// import 'package:saf/saf.dart';
 
 class ModelManagerScreen extends StatefulWidget {
   const ModelManagerScreen({super.key}); // constructor
@@ -54,34 +56,32 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     );
 
     if (result == null || result.files.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("No model added")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("No model added")));
+      }
       setState(() => _isPickingFile = false);
       return;
     }
 
     final file = result.files.single;
-    final filePath = file.path;
     final fileName = file.name;
 
     if (fileName.endsWith(".gguf") == false) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Only .gguf files are allowed")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Only .gguf files are allowed")));
+      }
       setState(() => _isPickingFile = false);
       return;
     }
 
-    // Upload the file to the server
-    bool uploadSuccess = await _uploadModelFile(filePath!);
-    if (!uploadSuccess) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to upload model")));
-      setState(() => _isPickingFile = false);
-      return;
-    }
+    final pickedFile = File(file.path!);
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final newModelPath = '${appDocDir.path}/${pickedFile.path.split('/').last}';
+    final newModelFile = await pickedFile.copy(newModelPath);
 
     final fileSize =
         "${(file.size / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB";
@@ -96,12 +96,13 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
       ..size = fileSize
       ..dateAdded = DateTime.now()
       ..filePath =
-          "/tmp/$fileName" // Use the server-side path
+          // "/tmp/$fileName" // Use the server-side path
+          newModelFile.path
       ..parameters = modelParameters
       ..isLoaded = false;
 
     for (var model in _modelsInApp) {
-      if (aiModel.name == model) {
+      if (aiModel.name == model && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("${aiModel.name} already exists")),
         );
@@ -111,31 +112,16 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     }
 
     _modelsInApp.add(aiModel.name);
-    await context.read<AiModelDb>().addModelToDb(aiModel);
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("${aiModel.name} added")));
+    if (mounted) {
+      await context.read<AiModelDb>().addModelToDb(aiModel);
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("${aiModel.name} added")));
+    }
 
     setState(() => _isPickingFile = false);
-  }
-
-  // Helper function to upload the model file
-  Future<bool> _uploadModelFile(String filePath) async {
-    try {
-      var request = http.MultipartRequest(
-        "POST",
-        Uri.parse("${ApiService.server}/add_model"),
-      );
-      request.files.add(await http.MultipartFile.fromPath("file", filePath));
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-      final data = json.decode(responseBody);
-      return data["status"] == "success";
-    } catch (e) {
-      debugPrint("Upload error: $e");
-      return false;
-    }
   }
 
   Future<void> _handleModelLoading(String path, int modelId) async {
@@ -158,21 +144,25 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     //   path,
     // ); // loading model using path through ApiSevice
 
+    debugPrint("model path at load: $path");
     final loaded = await llamaManager.laodModel(path);
     // if model is loaded then
     if (loaded) {
       await db.setActiveModel(modelId); // ensures only this model is active
+      debugPrint("set active model");
     }
 
     final String modelName = await db.getModleNameById(modelId);
     // showing message that model loaded of not
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          loaded ? "$modelName Loaded" : "Failed to load $modelName",
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            loaded ? "$modelName Loaded" : "Failed to load $modelName",
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   // hadnling unloading of AI model
@@ -187,15 +177,17 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
 
     final String modelName = await db.getModleNameById(modelId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          unLoaded
-              ? "$modelName Unloaded successfully"
-              : "Failed to unload $modelName",
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            unLoaded
+                ? "$modelName Unloaded successfully"
+                : "Failed to unload $modelName",
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   // func to delete model from DB
@@ -204,9 +196,11 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     final String modelName = await db.getModleNameById(modelId);
     // deleting model using model ID
     await db.deleteModel(modelId);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(" $modelName deleted")));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(" $modelName deleted")));
+    }
   }
 
   // func to handle model setting dialog
@@ -251,12 +245,9 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
                       parameters: model.parameters,
                       isLoaded: model.isLoaded,
                       onLoadUnlaod: () async {
-                        if (model.isLoaded) {
-                          await _unloadModel(model.id);
-                        } else {
-                          // await _loadModel(model.filePath, model.id);
-                          _handleModelLoading(model.filePath, model.id);
-                        }
+                        // await _loadModel(model.filePath, model.id);
+                        _handleModelLoading(model.filePath, model.id);
+
                         debugPrint(
                           "Model ${model.name} loaded=${model.isLoaded}",
                         );

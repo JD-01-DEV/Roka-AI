@@ -19,19 +19,14 @@ import 'package:roka_ai/screens/model_manager_screen.dart';
 import 'package:roka_ai/screens/chat_screen.dart';
 import 'package:roka_ai/screens/settings_screen.dart';
 
-late Isar isar; // creating Isar variable named isar
+late Isar isar;
 bool isDarkMode = true;
-// String serverAddress = "http://127.0.0.1:8000";
-
 final llamaManager = LlamaManager();
 
-// it the main function that runs / starts the app
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // ensuring that widgets are initialized
 
-  final dir =
-      await getApplicationSupportDirectory(); // getiing the directory in which Isar data will be stored
-  // initializing Isar with schemas and storage path
+  final dir = await getApplicationSupportDirectory();
   isar = await Isar.open([
     AiModelSchema,
     ChatSessionSchema,
@@ -42,37 +37,27 @@ void main() async {
   final prefs = await isar.userPreferences.get(0);
   isDarkMode = prefs?.isDarkMode ?? true;
 
-  // serverAddress = prefs?.serverAddress ?? "http://127.0.0.1:8000";
-
-  // this func is from material.dart which runs the app
   runApp(
-    // defining MultiProvider that allows to use multiple provider in app
+    // Allow to use multiple provider in app
     MultiProvider(
       // list of providers
       providers: [
-        // this type of provider helps to re-build/refresh widgets/UI when value in it changes
+        // [ChangeNotifierProvider] refreshes UI when value changes
         ChangeNotifierProvider(
           create: (_) =>
-              ChatProvider(
-                  ChatSessionDb(isar),
-                  ChatMessageDb(isar),
-                ) // creating ChatSessionDb and ChatMessageDb which will have session and message infos
-                ..loadSessions(), // calling loadSession function when creating ChatSessionDb so UI can Have previous session info
+              ChatProvider(ChatSessionDb(isar), ChatMessageDb(isar))
+                ..loadSessions(), // loads session initialy
         ),
-        ChangeNotifierProvider(
-          // creating AiModelDb as well to handle model's list and other related
-          create: (_) => AiModelDb(isar),
-        ),
+        ChangeNotifierProvider(create: (_) => AiModelDb(isar)),
         ChangeNotifierProvider(create: (_) => UserPreferencesProvider(isar)),
       ],
-      child: App(isDarkMode: isDarkMode),
+      child: App(),
     ),
   );
 }
 
 class App extends StatelessWidget {
-  bool isDarkMode;
-  App({required this.isDarkMode, super.key});
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {

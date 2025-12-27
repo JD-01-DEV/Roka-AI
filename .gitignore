@@ -1,10 +1,4 @@
-# Ignore everything
-/*
+/.*
 !.gitignore
-
-# But not these files/folders...
-!/lib/
-!/slib
-!/pubspec.yaml
-!/android
-!/README.md
+/icons
+/build

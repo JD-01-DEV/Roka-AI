@@ -47,13 +47,6 @@ class _ModelOptionsState extends State<MenuOptions> {
             },
           ),
         ),
-        PopupMenuItem(
-          child: ListTile(
-            leading: Icon(Icons.save_as),
-            title: Text("Export Chat"),
-            onTap: () => widget.onExport,
-          ),
-        ),
       ],
     );
   }

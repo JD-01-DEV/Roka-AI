@@ -167,7 +167,7 @@ B. Install and set up Flutter
 1. Download and install the latest version of Git for Windows from https://git-scm.com/downloads/win
 2. Download and install Visual Studio Code
 
-3. Follow [Installation through VS CODE](#vs-code), Don't forget to **replace** path to respective **SDK path**
+3. Follow from `B. Install and setup Flutter` [Installation through VS CODE](#vs-code), Don't forget to **replace** path to respective **SDK path**
 
 ### Mac OS
 
@@ -180,7 +180,7 @@ xcode-select --install
 ~~~
 
 2. Download and install Visual Studio Code
-2. Follow [Installation through VS CODE](#vs-code), Don't forget to **replace** path to respective **SDK path**
+2. Follow from `B. Install and setup Flutter` [Installation through VS CODE](#vs-code), Don't forget to **replace** path to respective **SDK path**
 
 
 ## Debugging with Physical Android Device

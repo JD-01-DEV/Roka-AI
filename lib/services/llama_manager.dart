@@ -17,7 +17,7 @@ class LlamaManager extends ChangeNotifier {
     if (Platform.isAndroid) {
       libraryPath = path.join(
         Directory.current.path,
-        "slib/android/arn64-v8a/libllama.so",
+        "slib/android/arm64-v8a/libllama.so",
       );
     }
     if (Platform.isIOS) libraryPath = "";
@@ -59,8 +59,11 @@ class LlamaManager extends ChangeNotifier {
         format: ChatMLFormat(),
       );
 
+      debugPrint("model path: $modelPath");
       _llamaParent = LlamaParent(loadCommand);
+
       await _llamaParent!.init();
+      debugPrint("llama parent init");
       return true;
     } catch (e) {
       debugPrint("Failed to load model: $e");

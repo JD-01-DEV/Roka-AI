@@ -4,7 +4,7 @@ import 'package:roka_ai/providers/chat_provider.dart';
 import 'package:roka_ai/databases/ai_model_db.dart';
 import 'package:roka_ai/providers/user_preferences_provider.dart';
 import 'package:roka_ai/schemas/chat_session_model.dart';
-import 'package:roka_ai/services/api_service.dart';
+// import 'package:roka_ai/services/api_service.dart';
 import 'package:roka_ai/themes/app_themes.dart';
 import 'package:roka_ai/widgets/message_bubble.dart';
 import 'package:roka_ai/widgets/model_options.dart';
@@ -123,6 +123,28 @@ class __ChatScreenState extends State<ChatScreen> {
     }
     debugPrint(buffer.toString());
     return buffer.toString();
+  }
+
+  void onRegenerate(ChatMessage msg) async {
+    final db = context.read<ChatProvider>();
+
+    final messages = await db.getMessagesForSession(msg.sessionId);
+    final index = messages.indexWhere((m) => m.id == msg.id);
+
+    if (index > 0) {
+      final userMessage = messages[index - 1];
+      final aiMessage = messages[index];
+
+      if (userMessage.isUser && mounted) {
+        context.read<ChatProvider>().regenerate(
+          userMessage.sessionId,
+          userMessage.id,
+          aiMessage.id,
+          userMessage.content,
+        );
+        setState(() => isLoading = true);
+      }
+    }
   }
 
   @override
@@ -324,31 +346,7 @@ class __ChatScreenState extends State<ChatScreen> {
                             }
                           : null,
                       onRegenerate: !msg.isUser
-                          ? () async {
-                              final db = context.read<ChatProvider>();
-
-                              final messages = await db.getMessagesForSession(
-                                msg.sessionId,
-                              );
-                              final index = messages.indexWhere(
-                                (m) => m.id == msg.id,
-                              );
-
-                              if (index > 0) {
-                                final userMessage = messages[index - 1];
-                                final aiMessage = messages[index];
-
-                                if (userMessage.isUser) {
-                                  context.read<ChatProvider>().regenerate(
-                                    userMessage.sessionId,
-                                    userMessage.id,
-                                    aiMessage.id,
-                                    userMessage.content,
-                                  );
-                                  setState(() => isLoading = true);
-                                }
-                              }
-                            }
+                          ? () async => onRegenerate(msg)
                           : null,
                     );
                   },
@@ -402,9 +400,12 @@ class __ChatScreenState extends State<ChatScreen> {
                       ? Icon(Icons.stop_circle_outlined, size: 30)
                       : Icon(Icons.send),
                   onPressed: () async {
-                    if (await context.read<AiModelDb>().isAnyModelLoaded()) {
+                    if (await context.read<AiModelDb>().isAnyModelLoaded() &&
+                        mounted) {
                       if (!isLoading ||
-                          context.read<ChatProvider>().hasResponseCompleted) {
+                          this.context
+                              .read<ChatProvider>()
+                              .hasResponseCompleted) {
                         if (chatProvider.currentSessionId == null) {
                           chatProvider.startNewSessions(
                             "MyGGUFModel",
@@ -419,9 +420,11 @@ class __ChatScreenState extends State<ChatScreen> {
                         setState(() => isLoading = false);
                       }
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Load the model first.")),
-                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          SnackBar(content: Text("Load the model first.")),
+                        );
+                      }
                     }
                   },
                 ),

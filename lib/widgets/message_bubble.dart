@@ -48,9 +48,11 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   void _sendEdit() async {
     if (!await context.read<AiModelDb>().isAnyModelLoaded()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Load a Model first")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Load a Model first")));
+      }
       return;
     }
     final newMessage = _controller.text.trim();
@@ -64,9 +66,11 @@ class _MessageBubbleState extends State<MessageBubble> {
   Future<void> _regenerateMessage() async {
     debugPrint("regenerate clicked");
     if (!await context.read<AiModelDb>().isAnyModelLoaded()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Load a Model first")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Load a Model first")));
+      }
       return;
     }
     if (widget.onRegenerate != null) {

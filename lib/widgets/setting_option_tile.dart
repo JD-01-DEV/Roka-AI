@@ -3,15 +3,15 @@ import 'package:roka_ai/main.dart';
 import 'package:roka_ai/themes/app_themes.dart';
 
 class SettingOptionTile extends StatefulWidget {
-  Widget title;
-  Widget? subTitle;
-  Widget? leading;
-  Widget? trailing;
-  double? overrideBorderRadius;
-  double? overridePaddingV;
-  double? overridePaddingH;
+  final Widget title;
+  final Widget? subTitle;
+  final Widget? leading;
+  final Widget? trailing;
+  final double? overrideBorderRadius;
+  final double? overridePaddingV;
+  final double? overridePaddingH;
 
-  SettingOptionTile({
+  const SettingOptionTile({
     required this.title,
     this.subTitle,
     this.leading,
