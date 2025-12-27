@@ -88,38 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               splashRadius: 5,
             ),
           ),
-          SettingOptionTile(
-            title: Text(
-              "Server Address",
-              style: TextStyle(fontSize: titleSize),
-            ),
-            leading: Icon(Icons.cloud_outlined, size: iconSize),
-            trailing: SizedBox(
-              // Use SizedBox or ConstrainedBox to control the width
-              width: 150, // Set a reasonable width
-              child: TextField(
-                controller: _serverTextFieldController,
-                decoration: InputDecoration(
-                  hintText: "serverAddress",
-                  border: OutlineInputBorder(borderSide: BorderSide.none),
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                ),
-                onSubmitted: (value) async {
-                  if (serverAddressRegex.hasMatch(value)) {
-                    await context
-                        .read<UserPreferencesProvider>()
-                        .updateServerAddress(value);
-                    setState(() {});
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Invalid server address")),
-                    );
-                  }
-                },
-              ),
-            ),
-          ),
+
           SettingOptionTile(
             title: Text("About", style: TextStyle(fontSize: titleSize)),
             subTitle: Row(

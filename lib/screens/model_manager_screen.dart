@@ -129,21 +129,21 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
     bool anyModelLoaded = db.aiModels.any((m) => m.isLoaded);
 
     if (anyModelLoaded) {
-      final modelId = await db.getActiveModelId();
+      final activeModelId = await db.getActiveModelId();
       await _unloadModel(modelId);
+      if (activeModelId != modelId) {
+        await _loadModel(path, modelId);
+      }
     }
 
-    await _loadModel(path, modelId);
+    if (!anyModelLoaded) {
+      await _loadModel(path, modelId);
+    }
   }
 
   // handles loading model with the help of ApiService
   Future<void> _loadModel(String path, int modelId) async {
     final db = context.read<AiModelDb>();
-
-    // final loaded = await ApiService.loadModel(
-    //   path,
-    // ); // loading model using path through ApiSevice
-
     debugPrint("model path at load: $path");
     final loaded = await llamaManager.laodModel(path);
     // if model is loaded then
