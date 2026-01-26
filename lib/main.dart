@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-//import 'package:llama_cpp_dart/llama_cpp_dart.dart';
 import 'package:roka_ai/providers/chat_provider.dart';
 
 import 'package:roka_ai/databases/ai_model_db.dart';
@@ -56,19 +55,29 @@ void main() async {
   );
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
   @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  @override
   Widget build(BuildContext context) {
     llamaManager.setLibraryPath();
-    isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
+    final provider = Provider.of<UserPreferencesProvider>(context);
+    provider.getIsDarkMode();
+
+    setState(() {
+      isDarkMode = provider.isDark;
+    });
+
+    debugPrint("main: $isDarkMode");
     return Consumer<UserPreferencesProvider>(
       builder: (context, provider, child) {
         return MaterialApp(
-          theme: AppThemes.lightTheme,
-          darkTheme: AppThemes.darkTheme,
-          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          theme: isDarkMode ? AppThemes.darkTheme : AppThemes.lightTheme,
           debugShowCheckedModeBanner: false,
           initialRoute: '/',
           routes: {

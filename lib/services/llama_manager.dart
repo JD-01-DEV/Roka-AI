@@ -15,10 +15,8 @@ class LlamaManager extends ChangeNotifier {
   Future<void> setLibraryPath() async {
     debugPrint("path: ${Directory.current.path}");
     if (Platform.isAndroid) {
-      libraryPath = path.join(
-        Directory.current.path,
-        "slib/android/arm64-v8a/libllama.so",
-      );
+      libraryPath =
+          "libllama.so"; // the shared library should be under android/app/src/main/jnilib
     }
     if (Platform.isIOS) libraryPath = "";
     if (Platform.isMacOS) libraryPath = "";
@@ -37,36 +35,26 @@ class LlamaManager extends ChangeNotifier {
     debugPrint("Seted path to: $libraryPath");
   }
 
-  Future<bool> laodModel(
-    String modelPath, {
-    int nPredict = 2048,
-    int nCtx = 4096,
-    double topP = 0.9,
-    double minP = 0.05,
-  }) async {
-    modelPath = modelPath;
-
+  Future<bool> loadModel(String path) async {
     try {
       final loadCommand = LlamaLoad(
-        path: modelPath,
+        path: path,
         modelParams: ModelParams(),
-        contextParams: ContextParams()
-          ..nPredict = nPredict
-          ..nCtx = nCtx,
-        samplingParams: SamplerParams()
-          ..topP = topP
-          ..minP = minP,
+        contextParams: ContextParams()..nCtx = 4096,
+        samplingParams: SamplerParams(),
         format: ChatMLFormat(),
       );
 
-      debugPrint("model path: $modelPath");
       _llamaParent = LlamaParent(loadCommand);
 
+      // The init call spawns the Isolate.
+      // If the UI still freezes here, the package is performing a sync check on the main thread.
       await _llamaParent!.init();
-      debugPrint("llama parent init");
+
+      notifyListeners();
       return true;
     } catch (e) {
-      debugPrint("Failed to load model: $e");
+      debugPrint("Load Error: $e");
       return false;
     }
   }

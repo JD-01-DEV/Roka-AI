@@ -1,14 +1,27 @@
+// --------------------------------------- //
+// -------------- Imports ---------------- //
+// --------------------------------------- //
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:roka_ai/main.dart';
+// -------------- Providers ----------------- //
+import 'package:provider/provider.dart';
 import 'package:roka_ai/providers/chat_provider.dart';
-import 'package:roka_ai/databases/ai_model_db.dart';
 import 'package:roka_ai/providers/user_preferences_provider.dart';
-import 'package:roka_ai/schemas/chat_session_model.dart';
-// import 'package:roka_ai/services/api_service.dart';
-import 'package:roka_ai/themes/app_themes.dart';
+// -------------- Widgets ----------------- //
 import 'package:roka_ai/widgets/message_bubble.dart';
 import 'package:roka_ai/widgets/model_options.dart';
-import 'package:provider/provider.dart';
+// -------------- STT & TTS ----------------- //
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+// -------------- Other ----------------- //
+import 'package:roka_ai/databases/ai_model_db.dart';
+import 'package:roka_ai/schemas/chat_session_model.dart';
+import 'package:roka_ai/themes/app_themes.dart';
+
+enum TtsState { playing, stopped, paused, continued }
+
+enum AppState { listening, processing, speaking, idle }
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -18,50 +31,68 @@ class ChatScreen extends StatefulWidget {
 }
 
 class __ChatScreenState extends State<ChatScreen> {
-  final FocusNode _focusNode = FocusNode(); // allows to focus on TextField
-  final _messageController = TextEditingController(); // controller for messages
-  final _messageScrollController =
-      ScrollController(); // help to auto scroll when chat exceeds screen hieght
-  final _chatScrollController = ScrollController();
-  final _searchController =
-      TextEditingController(); // helps to access TextField's properties and methods
-  List<ChatSession> _searchResults = [];
+  // ------------------------------------------ //
+  // -------------- Variables ----------------- //
+  // ------------------------------------------ //
 
+  // -------------- Controllers ----------------- //
+  final FocusNode _focusNode = FocusNode();
+  final _messageController = TextEditingController();
+  final _messageScrollController = ScrollController();
+  final _chatScrollController = ScrollController();
+  final _searchController = TextEditingController();
+
+  // -------------- Speech to Text ----------------- //
+  // final SpeechToText _speech = SpeechToText();
+  bool _isListening = false;
+  String _reconWords = '';
+
+  // -------------- Text to Speech ----------------- //
+  // FlutterTts flutterTts = FlutterTts();
+  TtsState _ttsState = TtsState.stopped;
+
+  // -------------- Model Parameters --------------- //
+  double temperature = 0.5;
+  double topP = 0.8;
+  int maxTokens = 512;
+  bool isLoading = false;
+
+  // ------------- Live Mode --------------------- //
+  final SpeechToText _speech = SpeechToText();
+  final FlutterTts _flutterTts = FlutterTts();
+  AppState _currentState = AppState.idle;
+  String _displayText = "Press the mic to start";
+
+  // -------------- Other ----------------- //
+  List<ChatSession> _searchResults = [];
   int? currentSessionId;
 
+  // --------------------------------------- //
+  // -------------- States ----------------- //
+  // --------------------------------------- //
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     context.read<AiModelDb>().resetOnStartup();
-    // Fetch the dark mode preference when the app starts
-    final provider = Provider.of<UserPreferencesProvider>(
-      context,
-      listen: false,
-    );
-    provider.getIsDarkMode();
+    _initTts();
+    _initStt();
   }
 
-  // diposing / deleting controllers and focus variables when app closes
   @override
   void dispose() {
-    _focusNode.dispose(); // removing focusNode when app closed
+    _focusNode.dispose();
     _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose(); // deleting searchController
-    _messageController.dispose(); // diposing _messageController
+    _searchController.dispose();
+    _messageController.dispose();
     _chatScrollController.dispose();
-    _messageScrollController.dispose(); // same with scrollController
-
-    super.dispose(); // calling dispose func of its parent class
+    _messageScrollController.dispose();
+    super.dispose();
   }
 
-  double temperature = 0.5; // model temprature
-  double topP = 0.8; // probabilty parameter for less bias and more creativity
-  int maxTokens =
-      512; // maximum tokens to limit leanth of output sequence by model
-
-  bool isLoading = false;
-  // bool _isInChatSession = false;
+  // ------------------------------------------ //
+  // -------------- Functions ----------------- //
+  // --------------------------------------- ---//
 
   // handles creating new chat
   void _newChat(ChatProvider chatProvider) {
@@ -70,6 +101,7 @@ class __ChatScreenState extends State<ChatScreen> {
     Navigator.pop(context); // closing drawer
   }
 
+  // handles auto scroll for AI response
   void _scrollToBottom({bool force = false}) {
     if (_messageScrollController.hasClients) {
       final maxScroll = _messageScrollController.position.maxScrollExtent;
@@ -82,6 +114,7 @@ class __ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // handles search feature in Drawer
   void _onSearchChanged() {
     final query = _searchController.text.trim();
     if (query.isEmpty) {
@@ -93,6 +126,7 @@ class __ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // filter chats based on search
   void _searchChats(String query) async {
     final results = await context.read<ChatProvider>().searchChats(query);
     setState(() {
@@ -100,6 +134,7 @@ class __ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // handle sendig and stopping messages
   Future<void> _sendMessage(ChatProvider chatProvider) async {
     final aiModelDb = context.read<AiModelDb>();
     final String modelName = await aiModelDb.getActiveModelName();
@@ -115,16 +150,7 @@ class __ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  String exportAsText(List<ChatMessage> messages) {
-    final buffer = StringBuffer();
-    for (final m in messages) {
-      buffer.writeln(m.isUser ? "User: ${m.content}" : "AI: ${m.content}");
-      buffer.writeln(); // blank for line spaces
-    }
-    debugPrint(buffer.toString());
-    return buffer.toString();
-  }
-
+  // regenerate AI's reponse
   void onRegenerate(ChatMessage msg) async {
     final db = context.read<ChatProvider>();
 
@@ -147,12 +173,129 @@ class __ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  //
+  Future<void> handleSendAndStop(ChatProvider chatProvider) async {
+    if (await context.read<AiModelDb>().isAnyModelLoaded() && mounted) {
+      if (!isLoading || context.read<ChatProvider>().hasResponseCompleted) {
+        if (chatProvider.currentSessionId == null) {
+          chatProvider.startNewSessions(
+            "MyGGUFModel",
+            "Chat ${DateTime.now().toString().substring(0, 10)}",
+          );
+        }
+        _sendMessage(chatProvider);
+        currentSessionId = chatProvider.currentSessionId;
+      } else {
+        // ApiService.stopStream();
+        llamaManager.stopStream();
+        setState(() => isLoading = false);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Load the model first.")));
+      }
+    }
+  }
+
+  // handles speech recognition
+  Future<void> _listen() async {
+    if (!_isListening) {
+      // 1. Initialize logic
+      bool available = await _speech.initialize(
+        onStatus: (status) => print('onStatus: $status'),
+        onError: (errorNotification) => print('onError: $errorNotification'),
+      );
+
+      if (available) {
+        setState(() => _isListening = true);
+
+        // 2. Start Listening
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _reconWords = val.recognizedWords;
+            _messageController.text = _reconWords;
+          }),
+        );
+      }
+    } else {
+      // 3. Stop Listening
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
+  void _initStt() async {
+    // Just warm up the engine, don't listen yet
+    await _speech.initialize(
+      onError: (val) => print('STT Error: $val'),
+      onStatus: (val) => _handleSttStatus(val),
+    );
+  }
+
+  void _initTts() {
+    _flutterTts.setCompletionHandler(() {
+      // CRITICAL: When TTS finishes, immediately start listening again
+      _startListening();
+    });
+  }
+
+  void _handleSttStatus(String status) {
+    // If the OS tells us listening stopped (silence detected), we process the text
+    if (status == 'done' && _currentState == AppState.listening) {
+      setState(() => _currentState = AppState.processing);
+      // In a real app, send text to AI/Logic here.
+      // For this demo, we just echo the text back.
+      if (_displayText.isNotEmpty && _displayText != "Listening...") {
+        _speakResponse("You said: $_displayText");
+      } else {
+        // If they said nothing, just listen again or go idle
+        _startListening();
+      }
+    }
+  }
+
+  Future<void> _startListening() async {
+    // Stop speaking if we interrupt
+    await _flutterTts.stop();
+
+    setState(() {
+      _currentState = AppState.listening;
+      _displayText = "Listening...";
+    });
+
+    // Listen for a short burst (e.g., command)
+    _speech.listen(
+      onResult: (val) => setState(() {
+        _displayText = val.recognizedWords;
+      }),
+      listenFor: const Duration(seconds: 10), // Auto-stop after silence
+      pauseFor: const Duration(seconds: 2), // Detect end of sentence
+      cancelOnError: true,
+      onDevice: true, // Try offline if available
+    );
+  }
+
+  Future<void> _speakResponse(String text) async {
+    setState(() => _currentState = AppState.speaking);
+    await _flutterTts.speak(text);
+    // The setCompletionHandler in initState will trigger _startListening when this finishes
+  }
+
+  void _stopLiveMode() {
+    _speech.stop();
+    _flutterTts.stop();
+    setState(() => _currentState = AppState.idle);
+  }
+
+  // ------------------------------------------ //
+  // -------------- User Inteface --------------//
+  // ------------------------------------------ //
   @override
   Widget build(BuildContext context) {
     isDarkMode = Provider.of<UserPreferencesProvider>(context).isDark;
-    final chatProvider = Provider.of<ChatProvider>(
-      context,
-    ); // getting chatProvider at the start of app
+    final chatProvider = Provider.of<ChatProvider>(context);
     return Scaffold(
       drawer: Drawer(
         child: Column(
@@ -255,11 +398,6 @@ class __ChatScreenState extends State<ChatScreen> {
                                       Navigator.pop(context);
                                       chatProvider.loadMessages(session.id);
                                     },
-                                    // trailing: IconButton(
-                                    //   onPressed: () => chatProvider
-                                    //       .deleteSession(session.id),
-                                    //   icon: Icon(Icons.delete),
-                                    // ),
                                     trailing: IconButton(
                                       onPressed: () {
                                         context
@@ -303,18 +441,7 @@ class __ChatScreenState extends State<ChatScreen> {
           },
         ),
         actions: [
-          IconButton(
-            icon: MenuOptions(),
-            onPressed: () => MenuOptions(
-              onExport: () async {
-                final messages = await chatProvider.getMessagesForSession(
-                  currentSessionId,
-                );
-                if (messages == []) return;
-                exportAsText(messages);
-              },
-            ),
-          ),
+          IconButton(icon: MenuOptions(), onPressed: () => MenuOptions()),
         ],
         actionsPadding: EdgeInsets.only(right: 15),
       ),
@@ -396,37 +523,26 @@ class __ChatScreenState extends State<ChatScreen> {
                 ),
                 margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
                 child: IconButton(
+                  icon: Icon(Icons.mic),
+                  onPressed: _currentState == AppState.idle
+                      ? _startListening
+                      : _stopLiveMode,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? AppThemes.secondaryDark
+                      : AppThemes.secondaryLight,
+                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                ),
+                margin: EdgeInsets.only(right: 10, bottom: 20),
+                child: IconButton(
                   icon: isLoading
                       ? Icon(Icons.stop_circle_outlined, size: 30)
                       : Icon(Icons.send),
-                  onPressed: () async {
-                    if (await context.read<AiModelDb>().isAnyModelLoaded() &&
-                        mounted) {
-                      if (!isLoading ||
-                          this.context
-                              .read<ChatProvider>()
-                              .hasResponseCompleted) {
-                        if (chatProvider.currentSessionId == null) {
-                          chatProvider.startNewSessions(
-                            "MyGGUFModel",
-                            "Chat ${DateTime.now().toString().substring(0, 10)}",
-                          );
-                        }
-                        _sendMessage(chatProvider);
-                        currentSessionId = chatProvider.currentSessionId;
-                      } else {
-                        // ApiService.stopStream();
-                        llamaManager.stopStream();
-                        setState(() => isLoading = false);
-                      }
-                    } else {
-                      if (mounted) {
-                        ScaffoldMessenger.of(this.context).showSnackBar(
-                          SnackBar(content: Text("Load the model first.")),
-                        );
-                      }
-                    }
-                  },
+                  onPressed: () => handleSendAndStop(chatProvider),
                 ),
               ),
             ],

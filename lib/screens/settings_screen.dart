@@ -27,8 +27,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     r':([0-9]{1,5})$', // port (1-5 digits)
   );
 
-  final _serverTextFieldController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     isDarkMode = context.read<UserPreferencesProvider>().isDark;
@@ -81,10 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               menuPadding: EdgeInsets.all(10),
-              // borderRadius: BorderRadius.only(
-              //   topLeft: Radius.circular(50),
-              //   bottomRight: Radius.circular(20),
-              // ),
+
               splashRadius: 5,
             ),
           ),

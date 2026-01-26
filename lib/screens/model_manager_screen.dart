@@ -145,7 +145,7 @@ class _ModelManagerScreenState extends State<ModelManagerScreen>
   Future<void> _loadModel(String path, int modelId) async {
     final db = context.read<AiModelDb>();
     debugPrint("model path at load: $path");
-    final loaded = await llamaManager.laodModel(path);
+    final loaded = await llamaManager.loadModel(path);
     // if model is loaded then
     if (loaded) {
       await db.setActiveModel(modelId); // ensures only this model is active
