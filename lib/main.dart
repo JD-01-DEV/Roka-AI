@@ -6,6 +6,7 @@ import 'package:roka_ai/databases/ai_model_db.dart';
 import 'package:roka_ai/providers/user_preferences_provider.dart';
 import 'package:roka_ai/schemas/chat_session_model.dart';
 import 'package:roka_ai/schemas/user_preferences.dart';
+import 'package:roka_ai/screens/live_mode_screen.dart';
 import 'package:roka_ai/services/llama_manager.dart';
 import 'package:roka_ai/themes/app_themes.dart';
 import 'package:path_provider/path_provider.dart';
@@ -84,6 +85,7 @@ class _AppState extends State<App> {
             '/': (context) => ChatScreen(),
             '/settings': (context) => SettingsScreen(),
             '/model_manager': (context) => ModelManagerScreen(),
+            '/live_mode': (context) => LiveModeScreen(),
           },
         );
       },

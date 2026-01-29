@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppThemes {
-  static Color accentDark = Color(0xFF07B0FF);
+  static Color accentDark = Color(0xFF17B6FF);
   static Color accentBgDark = Color(0xFF004B6E);
-  static Color accentLight = Color(0xFF07B0FF);
+  static Color accentLight = Color(0xFF17B6FF);
   static Color accentBgLight = Color(0xFF3BC1FF);
 
   static Color bgDark = Color(0xFF000000);
@@ -15,7 +15,7 @@ class AppThemes {
   static Color secondaryDark = Color(0xFF1A1A1A);
   static Color secondaryLight = Color(0xFFE1E1E1);
 
-  static Color tertieryDark = Color.fromARGB(255, 46, 46, 46);
+  static Color tertieryDark = Color(0xFF2E2E2E);
   static Color tertieryLight = Color(0xFF585858);
 
   static Color primaryTextDark = Color(0xFFEFEFEF);
@@ -24,8 +24,8 @@ class AppThemes {
   static Color secondaryTextDark = Color(0xFFD5D5D5);
   static Color secondaryTextLight = Color(0xFF353535);
 
-  static Color tertiaryTextDark = Color(0xFF5E5E5E);
-  static Color tertiaryTextLight = Color(0xFF7F7F7F);
+  static Color tertiaryTextDark = Color.fromARGB(255, 71, 71, 71);
+  static Color tertiaryTextLight = Color(0xFFD8D8D8);
 
   static Color textFieldBgDark = Colors.black;
   static Color textFieldBgLight = Colors.white;

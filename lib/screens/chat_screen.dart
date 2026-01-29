@@ -2,7 +2,6 @@
 // -------------- Imports ---------------- //
 // --------------------------------------- //
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:roka_ai/main.dart';
 // -------------- Providers ----------------- //
 import 'package:provider/provider.dart';
@@ -12,7 +11,6 @@ import 'package:roka_ai/providers/user_preferences_provider.dart';
 import 'package:roka_ai/widgets/message_bubble.dart';
 import 'package:roka_ai/widgets/model_options.dart';
 // -------------- STT & TTS ----------------- //
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 // -------------- Other ----------------- //
 import 'package:roka_ai/databases/ai_model_db.dart';
@@ -43,25 +41,18 @@ class __ChatScreenState extends State<ChatScreen> {
   final _searchController = TextEditingController();
 
   // -------------- Speech to Text ----------------- //
-  // final SpeechToText _speech = SpeechToText();
+  final SpeechToText _speech = SpeechToText();
   bool _isListening = false;
   String _reconWords = '';
-
-  // -------------- Text to Speech ----------------- //
-  // FlutterTts flutterTts = FlutterTts();
-  TtsState _ttsState = TtsState.stopped;
 
   // -------------- Model Parameters --------------- //
   double temperature = 0.5;
   double topP = 0.8;
   int maxTokens = 512;
-  bool isLoading = false;
 
-  // ------------- Live Mode --------------------- //
-  final SpeechToText _speech = SpeechToText();
-  final FlutterTts _flutterTts = FlutterTts();
-  AppState _currentState = AppState.idle;
-  String _displayText = "Press the mic to start";
+  // ------------- States ----------------- //
+  bool _isLoading = false;
+  bool _isWriting = false;
 
   // -------------- Other ----------------- //
   List<ChatSession> _searchResults = [];
@@ -75,8 +66,8 @@ class __ChatScreenState extends State<ChatScreen> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     context.read<AiModelDb>().resetOnStartup();
-    _initTts();
-    _initStt();
+    // _initTts();
+    // _initStt();
   }
 
   @override
@@ -141,8 +132,8 @@ class __ChatScreenState extends State<ChatScreen> {
     setState(() {
       chatProvider
           .sendMessage(true, _messageController.text, modelName)
-          .then((_) => {setState(() => isLoading = false)});
-      isLoading = true;
+          .then((_) => {setState(() => _isLoading = false)});
+      _isLoading = true;
     });
     _messageController.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -168,7 +159,7 @@ class __ChatScreenState extends State<ChatScreen> {
           aiMessage.id,
           userMessage.content,
         );
-        setState(() => isLoading = true);
+        setState(() => _isLoading = true);
       }
     }
   }
@@ -176,7 +167,7 @@ class __ChatScreenState extends State<ChatScreen> {
   //
   Future<void> handleSendAndStop(ChatProvider chatProvider) async {
     if (await context.read<AiModelDb>().isAnyModelLoaded() && mounted) {
-      if (!isLoading || context.read<ChatProvider>().hasResponseCompleted) {
+      if (!_isLoading || context.read<ChatProvider>().hasResponseCompleted) {
         if (chatProvider.currentSessionId == null) {
           chatProvider.startNewSessions(
             "MyGGUFModel",
@@ -188,7 +179,7 @@ class __ChatScreenState extends State<ChatScreen> {
       } else {
         // ApiService.stopStream();
         llamaManager.stopStream();
-        setState(() => isLoading = false);
+        setState(() => _isLoading = false);
       }
     } else {
       if (mounted) {
@@ -204,8 +195,9 @@ class __ChatScreenState extends State<ChatScreen> {
     if (!_isListening) {
       // 1. Initialize logic
       bool available = await _speech.initialize(
-        onStatus: (status) => print('onStatus: $status'),
-        onError: (errorNotification) => print('onError: $errorNotification'),
+        onStatus: (status) => debugPrint('onStatus: $status'),
+        onError: (errorNotification) =>
+            debugPrint('onError: $errorNotification'),
       );
 
       if (available) {
@@ -226,67 +218,12 @@ class __ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _initStt() async {
-    // Just warm up the engine, don't listen yet
-    await _speech.initialize(
-      onError: (val) => print('STT Error: $val'),
-      onStatus: (val) => _handleSttStatus(val),
-    );
-  }
-
-  void _initTts() {
-    _flutterTts.setCompletionHandler(() {
-      // CRITICAL: When TTS finishes, immediately start listening again
-      _startListening();
-    });
-  }
-
-  void _handleSttStatus(String status) {
-    // If the OS tells us listening stopped (silence detected), we process the text
-    if (status == 'done' && _currentState == AppState.listening) {
-      setState(() => _currentState = AppState.processing);
-      // In a real app, send text to AI/Logic here.
-      // For this demo, we just echo the text back.
-      if (_displayText.isNotEmpty && _displayText != "Listening...") {
-        _speakResponse("You said: $_displayText");
-      } else {
-        // If they said nothing, just listen again or go idle
-        _startListening();
-      }
+  Future<void> _onTextFieldChange() async {
+    if (_messageController.text.isEmpty) {
+      setState(() => _isWriting = false);
+    } else {
+      setState(() => _isWriting = true);
     }
-  }
-
-  Future<void> _startListening() async {
-    // Stop speaking if we interrupt
-    await _flutterTts.stop();
-
-    setState(() {
-      _currentState = AppState.listening;
-      _displayText = "Listening...";
-    });
-
-    // Listen for a short burst (e.g., command)
-    _speech.listen(
-      onResult: (val) => setState(() {
-        _displayText = val.recognizedWords;
-      }),
-      listenFor: const Duration(seconds: 10), // Auto-stop after silence
-      pauseFor: const Duration(seconds: 2), // Detect end of sentence
-      cancelOnError: true,
-      onDevice: true, // Try offline if available
-    );
-  }
-
-  Future<void> _speakResponse(String text) async {
-    setState(() => _currentState = AppState.speaking);
-    await _flutterTts.speak(text);
-    // The setCompletionHandler in initState will trigger _startListening when this finishes
-  }
-
-  void _stopLiveMode() {
-    _speech.stop();
-    _flutterTts.stop();
-    setState(() => _currentState = AppState.idle);
   }
 
   // ------------------------------------------ //
@@ -469,7 +406,7 @@ class __ChatScreenState extends State<ChatScreen> {
                                 msg.id,
                                 newMessage,
                               );
-                              setState(() => isLoading = true);
+                              setState(() => _isLoading = true);
                             }
                           : null,
                       onRegenerate: !msg.isUser
@@ -481,25 +418,23 @@ class __ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  margin: EdgeInsets.only(left: 10, bottom: 20),
-                  decoration: BoxDecoration(
-                    color: isDarkMode
-                        ? AppThemes.secondaryDark
-                        : AppThemes.secondaryLight,
-                    borderRadius: const BorderRadius.all(Radius.circular(50)),
-                  ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            margin: EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? AppThemes.secondaryDark
+                  : AppThemes.secondaryLight,
+              borderRadius: const BorderRadius.all(Radius.circular(50)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
                   child: TextField(
                     controller: _messageController,
                     onSubmitted: (_) => _sendMessage(chatProvider),
                     focusNode: _focusNode,
+                    onChanged: (value) => _onTextFieldChange(),
                     decoration: InputDecoration(
                       hintText: "Ask any thing ...",
                       hintStyle: TextStyle(
@@ -512,40 +447,42 @@ class __ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? AppThemes.secondaryDark
-                      : AppThemes.secondaryLight,
-                  borderRadius: const BorderRadius.all(Radius.circular(50)),
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? AppThemes.tertiaryTextDark
+                        : AppThemes.tertiaryTextLight,
+                    borderRadius: const BorderRadius.all(Radius.circular(50)),
+                  ),
+                  margin: EdgeInsets.only(right: 10),
+                  child: IconButton(
+                    icon: Icon(Icons.mic),
+                    onPressed: () => _listen(),
+                  ),
                 ),
-                margin: EdgeInsets.only(left: 10, right: 10, bottom: 20),
-                child: IconButton(
-                  icon: Icon(Icons.mic),
-                  onPressed: _currentState == AppState.idle
-                      ? _startListening
-                      : _stopLiveMode,
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? AppThemes.accentDark
+                        : AppThemes.accentLight,
+                    borderRadius: const BorderRadius.all(Radius.circular(50)),
+                  ),
+                  margin: EdgeInsets.only(right: 10),
+                  child: IconButton(
+                    icon: !_isWriting
+                        ? Icon(Icons.multitrack_audio_outlined)
+                        : _isLoading
+                        ? Icon(Icons.stop_circle_outlined)
+                        : Icon(Icons.send),
+                    onPressed: () => !_isWriting
+                        ? () => Navigator.pushNamed(context, '/live_mode')
+                        : handleSendAndStop(chatProvider),
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? AppThemes.secondaryDark
-                      : AppThemes.secondaryLight,
-                  borderRadius: const BorderRadius.all(Radius.circular(50)),
-                ),
-                margin: EdgeInsets.only(right: 10, bottom: 20),
-                child: IconButton(
-                  icon: isLoading
-                      ? Icon(Icons.stop_circle_outlined, size: 30)
-                      : Icon(Icons.send),
-                  onPressed: () => handleSendAndStop(chatProvider),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
