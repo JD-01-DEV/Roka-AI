@@ -11,7 +11,7 @@ final FlutterTts _flutterTts = FlutterTts();
 AppState _currentState = AppState.idle;
 String _displayText = "Press the mic to start";
 
-bool _isLive = true;
+bool _isLive = false;
 
 class LiveModeScreen extends StatefulWidget {
   const LiveModeScreen({super.key});
@@ -125,11 +125,11 @@ class _LiveModeScreenState extends State<LiveModeScreen> {
                 borderRadius: BorderRadius.all(Radius.circular(40)),
                 margin: EdgeInsets.all(20),
               ),
-              SizedBox(width: 240),
+              SizedBox(width: 100),
               IconBtn(
                 icon: Icon(_isLive ? Icons.stop : Icons.mic, size: 40),
                 onPressed: () {
-                  _isLive ? _startListening() : _stopLiveMode();
+                  _isLive ? _stopLiveMode() : _startListening();
                   setState(() => _isLive = !_isLive);
                 },
                 darkThemeColor: AppThemes.tertiaryTextDark,

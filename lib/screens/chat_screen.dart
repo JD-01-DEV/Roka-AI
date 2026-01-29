@@ -477,7 +477,7 @@ class __ChatScreenState extends State<ChatScreen> {
                         ? Icon(Icons.stop_circle_outlined)
                         : Icon(Icons.send),
                     onPressed: () => !_isWriting
-                        ? () => Navigator.pushNamed(context, '/live_mode')
+                        ? Navigator.pushNamed(context, '/live_mode')
                         : handleSendAndStop(chatProvider),
                   ),
                 ),
